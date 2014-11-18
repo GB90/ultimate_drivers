@@ -1,3 +1,10 @@
+/*
+ * modify-2014.11.18 ultimate_drivers/ud_driver_gpio_at91/ud_driver_gpio.c
+ * 依据多设备驱动的模型构建，由于GPIO本身不具备多设备意义，故此处该做法没有实际意义，算是一种尝试
+ * 提供了open,release,write,read,ioctl接口，作为最底层的驱动模块，经常会被其他驱动模块所使用，故提供了export_symbol接口
+ * 适用范围：at91
+ */
+
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
@@ -22,13 +29,17 @@
 
 #include "ud_driver_gpio.h"
 
+//主设备号
 int i32_gpio_major = UD_GPIO_MAJOR;
+//次设备号
 int i32_gpio_minor = 0;
+//设备数量
 int i32_gpio_max_devs = UD_GPIO_MAX_DEVS;
 
 module_param(i32_gpio_major, int ,S_IRUGO);
 module_param(i32_gpio_minor, int ,S_IRUGO);
-module_param(i32_gpio_max_devs, int ,S_IRUGO);
+//modify-2014.11.18 去掉了多设备的模块参数
+//module_param(i32_gpio_max_devs, int ,S_IRUGO);
 
 MODULE_LICENSE("Proprietary");
 
@@ -37,6 +48,117 @@ struct gpio_dev * x_p_gpio_devices;
 static void __exit ud_gpio_module_exit(void);
 static int __init ud_gpio_module_init(void);
 
+
+unsigned int ud_gpio_get_pin(struct gpio_struct * x_p_gpio);
+
+int ud_gpio_export_set_dir(struct gpio_struct * x_p_gpio);
+int ud_gpio_export_set_value(struct gpio_struct * x_p_gpio);
+int ud_gpio_export_get_value(struct gpio_struct * x_p_gpio);
+
+/*
+ * 获取GPIO的引脚地址
+ * 输入：struct gpio_struct *
+ * 输出：-EIO（出错），port_pin（正常）
+ */
+unsigned int ud_gpio_get_pin(struct gpio_struct * x_p_gpio)
+{
+    unsigned int    u32_port_pin;
+
+    if(x_p_gpio->x_pin > 31)
+    {
+        printd("pin error /n");
+        u32_port_pin = -EIO;
+        return (u32_port_pin);
+    }
+
+    switch(x_p_gpio->x_port)
+    {
+    case 0: u32_port_pin = PIN_BASE + 0x00 + x_p_gpio->x_pin; break;
+    case 1: u32_port_pin = PIN_BASE + 0x20 + x_p_gpio->x_pin; break;
+    case 2: u32_port_pin = PIN_BASE + 0x40 + x_p_gpio->x_pin; break;
+    case 3: u32_port_pin = PIN_BASE + 0x60 + x_p_gpio->x_pin; break;
+    case 4: u32_port_pin = PIN_BASE + 0x80 + x_p_gpio->x_pin; break;
+    default :
+        printd("port error /n");
+        u32_port_pin = -EIO;
+    }
+
+    return (u32_port_pin);
+}
+
+/*
+ * 设置引脚方向
+ * 输入：struct gpio_struct *
+ * 输出：-EIO（出错），0（正常）
+ */
+int ud_gpio_export_set_dir(struct gpio_struct * x_p_gpio)
+{
+    unsigned int    u32_port_pin;
+
+    u32_port_pin = ud_gpio_get_pin(x_p_gpio);
+    if(u32_port_pin == -EIO)
+    {
+        return (-EIO);
+    }
+
+    if(x_p_gpio->x_dir)
+    {
+        at91_set_gpio_output(u32_port_pin, x_p_gpio->x_value);
+    }
+    else
+    {
+        at91_set_gpio_input(u32_port_pin, x_p_gpio->x_pullup);
+    }
+
+    return (0);
+}
+
+/*
+ * 设置输出电平
+ * 输入：struct gpio_struct *
+ * 输出：-EIO（出错），0（正常）
+ */
+int ud_gpio_export_set_value(struct gpio_struct * x_p_gpio)
+{
+    unsigned int    u32_port_pin;
+
+    u32_port_pin = ud_gpio_get_pin(x_p_gpio);
+    if(u32_port_pin == -EIO)
+    {
+        return (-EIO);
+    }
+
+    at91_set_gpio_value(u32_port_pin, x_p_gpio->x_value);
+
+    return (0);
+}
+
+/*
+ * 获取输入电平
+ * 输入：struct gpio_struct *
+ * 输出：-EIO（出错），0（正常）
+ */
+int ud_gpio_export_get_value(struct gpio_struct * x_p_gpio)
+{
+    unsigned int    u32_port_pin;
+
+    u32_port_pin = ud_gpio_get_pin(x_p_gpio);
+    if(u32_port_pin == -EIO)
+    {
+        return (-EIO);
+    }
+
+    if(at91_get_gpio_value(u32_port_pin) == 0)
+    {
+        x_p_gpio->x_value = UD_GPIO_VALUE_LOW;
+    }
+    else
+    {
+        x_p_gpio->x_value = UD_GPIO_VALUE_HIGH;
+    }
+
+    return (0);
+}
 
 int ud_gpio_open(struct inode * x_p_inode, struct file * x_p_file)
 {
@@ -61,11 +183,13 @@ ssize_t ud_gpio_write(struct file * x_p_file, const char __user * i8_p_buf, size
     return (0);
 }
 
+/*
+ * 提供了UD_GPIO_CMD_SET_DIR， UD_GPIO_CMD_SET_VALUE， UD_GPIO_CMD_GET_VALUE三种操作
+ */
 long ud_gpio_ioctl(struct file * x_p_file, unsigned int u32_cmd, unsigned long u32_arg)
 {
     long                    i32_result = 0;
     unsigned long           u32_flags;
-    unsigned int            u32_port_pin;
     struct gpio_dev *       x_p_devices;
     struct gpio_struct *    x_p_gpio;
 
@@ -87,49 +211,27 @@ long ud_gpio_ioctl(struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         goto fail0;
     }
 
-    if(x_p_gpio->x_pin > 31)
-    {
-        printd("pin error /n");
-        i32_result = -EINVAL;
-        goto fail0;
-    }
-
-    switch(x_p_gpio->x_port)
-    {
-    case 0: u32_port_pin = PIN_BASE + 0x00 + x_p_gpio->x_pin; break;
-    case 1: u32_port_pin = PIN_BASE + 0x20 + x_p_gpio->x_pin; break;
-    case 2: u32_port_pin = PIN_BASE + 0x40 + x_p_gpio->x_pin; break;
-    case 3: u32_port_pin = PIN_BASE + 0x60 + x_p_gpio->x_pin; break;
-    case 4: u32_port_pin = PIN_BASE + 0x80 + x_p_gpio->x_pin; break;
-    default :
-        printd("port error /n");
-        i32_result = -EINVAL;
-        goto fail0;
-    }
-
     switch(u32_cmd)
     {
     case UD_GPIO_CMD_SET_DIR :
-        if(x_p_gpio->x_dir)
+        if(ud_gpio_export_set_dir(x_p_gpio) == -EIO)
         {
-            at91_set_gpio_output(u32_port_pin, x_p_gpio->x_value);
-        }
-        else
-        {
-            at91_set_gpio_input(u32_port_pin, x_p_gpio->x_pullup);
+            i32_result = -EIO;
+            goto fail0;
         }
         break;
     case UD_GPIO_CMD_SET_VALUE :
-        at91_set_gpio_value(u32_port_pin, x_p_gpio->x_value);
+        if(ud_gpio_export_set_value(x_p_gpio) == -EIO)
+        {
+            i32_result = -EIO;
+            goto fail0;
+        }
         break;
     case UD_GPIO_CMD_GET_VALUE :
-        if(at91_get_gpio_value(u32_port_pin) == 0)
+        if(ud_gpio_export_get_value(x_p_gpio) == -EIO)
         {
-            x_p_gpio->x_value = UD_GPIO_VALUE_LOW;
-        }
-        else
-        {
-            x_p_gpio->x_value = UD_GPIO_VALUE_HIGH;
+            i32_result = -EIO;
+            goto fail0;
         }
 
         if(0 != copy_from_user((struct gpio_struct*)u32_arg, x_p_gpio, sizeof(struct gpio_struct)))
@@ -236,6 +338,10 @@ static void __exit ud_gpio_module_exit(void)
 
     unregister_chrdev_region(x_dev, i32_gpio_max_devs);
 }
+
+EXPORT_SYMBOL(ud_gpio_export_set_dir);
+EXPORT_SYMBOL(ud_gpio_export_set_value);
+EXPORT_SYMBOL(ud_gpio_export_get_value);
 
 module_init(ud_gpio_module_init);
 module_exit(ud_gpio_module_exit);

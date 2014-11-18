@@ -4,14 +4,13 @@
 #include <linux/ioctl.h>
 #include <linux/spinlock.h>
 
-#ifndef __UD_PRINT__
-#define __UD_PRINT__
-#define UD_DEBUG
-#ifdef UD_DEBUG
-#define printd(arg,x...)    printk(KERN_ALERT"UD debug:"arg,##x)
+
+#define UD_GPIO_DEBUG
+
+#ifdef UD_GPIO_DEBUG
+#define printd(arg,x...)    printk(KERN_ALERT"led debug:"arg,##x)
 #else
 #define printd(arg,x...)
-#endif
 #endif
 
 #ifndef UD_GPIO_MAJOR
