@@ -5,12 +5,14 @@
 #include <linux/spinlock.h>
 
 
-#define UD_GPIO_DEBUG
-
-#ifdef UD_GPIO_DEBUG
-#define printd(arg,x...)    printk(KERN_ALERT"led debug:"arg,##x)
+#ifndef __UD_PRINT__
+#define __UD_PRINT__
+#define UD_DEBUG
+#ifdef UD_DEBUG
+#define printd(arg,x...)    printk(KERN_ALERT"UD debug:"arg,##x)
 #else
 #define printd(arg,x...)
+#endif
 #endif
 
 #ifndef UD_GPIO_MAJOR
@@ -91,16 +93,23 @@ enum gpio_enum_value
 
 struct gpio_struct
 {
+    //引脚port(A,B,C,D,E)
     enum gpio_enum_port     x_port;
+    //引脚pin(0~31)
     enum gpio_enum_pin      x_pin;
+    //引脚方向(in,out)
     enum gpio_enum_dir      x_dir;
+    //引脚是否上拉，输入时使用(off,on)
     enum gpio_enum_pullup   x_pullup;
+    //引脚输入输出值(low,high)
     enum gpio_enum_value    x_value;
 };
 
 struct gpio_dev
 {
+    //自旋锁
     spinlock_t x_spinlock;
+    //cdev
     struct cdev x_cdev;
 };
 
