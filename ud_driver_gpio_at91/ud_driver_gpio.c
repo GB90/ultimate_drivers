@@ -295,7 +295,7 @@ static int __init ud_gpio_module_init (void)
     {
         i32_result = alloc_chrdev_region(&x_dev, i32_gpio_minor, i32_gpio_max_devs, "ud_gpio");
         i32_gpio_major = MAJOR(x_dev);
-        printd("devno is %d \n", x_dev);
+        printd("devno major is %d\n", i32_gpio_major);
     }
 
     if (i32_result < 0)
