@@ -64,7 +64,7 @@ module_param(i32_bus_minor, int ,S_IRUGO);
 //modify-2014.11.18 去掉了多设备的模块参数
 //module_param(i32_bus_max_devs, int ,S_IRUGO);
 
-MODULE_LICENSE("Proprietary");
+MODULE_LICENSE("Dual BSD/GPL");
 
 //载入GPIO驱动函数接口
 extern int ud_gpio_export_set_dir (struct gpio_struct *);
@@ -123,7 +123,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
     x_p_bus = (struct bus_struct *) kmalloc(sizeof(struct bus_struct), GFP_KERNEL);
     if (!x_p_bus)
     {
-        printd("out of memory /n");
+        printd("out of memory \n");
         i32_result = -ENOMEM;
         goto fail1;
     }
@@ -131,7 +131,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
     //拷贝到内部空间
     if (0 != copy_from_user(x_p_bus, (struct bus_struct*) u32_arg, sizeof(struct bus_struct)))
     {
-        printd("copy error /n");
+        printd("copy error \n");
         i32_result = -EPERM;
         goto fail0;
     }
@@ -230,7 +230,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
 
         break;
     default :
-        printd("cmd error /n");
+        printd("cmd error \n");
         i32_result = -EINVAL;
         goto fail0;
     }
@@ -269,14 +269,14 @@ static int __init ud_bus_module_init (void)
 
     if (i32_result < 0)
     {
-        printd("can't get major /n");
+        printd("can't get major \n");
         return (i32_result);
     }
 
     x_p_bus_devices = kmalloc(i32_bus_max_devs * sizeof(struct bus_dev), GFP_KERNEL);
     if (!x_p_bus_devices)
     {
-        printd("out of memory /n");
+        printd("out of memory \n");
         i32_result = -ENOMEM;
         goto fail;
     }
@@ -382,7 +382,7 @@ static int __init ud_bus_module_init (void)
         }
     }
 
-    printd("insmod successfully/n");
+    printd("insmod successfully\n");
     return (0);
 
     fail : ud_bus_module_exit();
@@ -405,7 +405,7 @@ static void __exit ud_bus_module_exit (void)
 
     unregister_chrdev_region(x_dev, i32_bus_max_devs);
 
-    printd("rmmod successfully/n");
+    printd("rmmod successfully\n");
 }
 
 

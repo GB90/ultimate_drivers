@@ -50,7 +50,7 @@ module_param(i32_gpio_minor, int ,S_IRUGO);
 //modify-2014.11.18 去掉了多设备的模块参数
 //module_param(i32_gpio_max_devs, int ,S_IRUGO);
 
-MODULE_LICENSE("Proprietary");
+MODULE_LICENSE("Dual BSD/GPL");
 
 struct gpio_dev * x_p_gpio_devices;
 
@@ -74,7 +74,7 @@ unsigned int ud_gpio_get_pin (struct gpio_struct * x_p_gpio)
 
     if (x_p_gpio->x_pin > 31)
     {
-        printd("pin error /n");
+        printd("pin error \n");
         u32_port_pin = -EIO;
         return (u32_port_pin);
     }
@@ -97,7 +97,7 @@ unsigned int ud_gpio_get_pin (struct gpio_struct * x_p_gpio)
         u32_port_pin = PIN_BASE + 0x80 + x_p_gpio->x_pin;
         break;
     default :
-        printd("port error /n");
+        printd("port error \n");
         u32_port_pin = -EIO;
     }
 
@@ -217,14 +217,14 @@ long ud_gpio_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long 
     x_p_gpio = (struct gpio_struct *) kmalloc(sizeof(struct gpio_struct), GFP_KERNEL);
     if (!x_p_gpio)
     {
-        printd("out of memory /n");
+        printd("out of memory \n");
         i32_result = -ENOMEM;
         goto fail1;
     }
 
     if (0 != copy_from_user(x_p_gpio, (struct gpio_struct*) u32_arg, sizeof(struct gpio_struct)))
     {
-        printd("copy error /n");
+        printd("copy error \n");
         i32_result = -EPERM;
         goto fail0;
     }
@@ -254,13 +254,13 @@ long ud_gpio_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long 
 
         if (0 != copy_from_user((struct gpio_struct*) u32_arg, x_p_gpio, sizeof(struct gpio_struct)))
         {
-            printd("copy error /n");
+            printd("copy error \n");
             i32_result = -EPERM;
             goto fail0;
         }
         break;
     default :
-        printd("cmd error /n");
+        printd("cmd error \n");
         i32_result = -EINVAL;
         goto fail0;
     }
@@ -299,14 +299,14 @@ static int __init ud_gpio_module_init (void)
 
     if (i32_result < 0)
     {
-        printd("can't get major /n");
+        printd("can't get major \n");
         return (i32_result);
     }
 
     x_p_gpio_devices = kmalloc(i32_gpio_max_devs * sizeof(struct gpio_dev), GFP_KERNEL);
     if (!x_p_gpio_devices)
     {
-        printd("out of memory /n");
+        printd("out of memory \n");
         i32_result = -ENOMEM;
         goto fail;
     }
@@ -330,7 +330,7 @@ static int __init ud_gpio_module_init (void)
         }
     }
 
-    printd("insmod successfully/n");
+    printd("insmod successfully\n");
     return (0);
 
     fail : ud_gpio_module_exit();
@@ -353,7 +353,7 @@ static void __exit ud_gpio_module_exit (void)
 
     unregister_chrdev_region(x_dev, i32_gpio_max_devs);
 
-    printd("rmmod successfully/n");
+    printd("rmmod successfully\n");
 }
 
 //使其他模块可以调用GPIO的驱动
