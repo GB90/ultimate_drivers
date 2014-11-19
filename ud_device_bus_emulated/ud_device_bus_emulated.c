@@ -382,6 +382,7 @@ static int __init ud_bus_module_init (void)
         }
     }
 
+    printd("insmod successfully/n");
     return (0);
 
     fail : ud_bus_module_exit();
@@ -403,6 +404,8 @@ static void __exit ud_bus_module_exit (void)
     }
 
     unregister_chrdev_region(x_dev, i32_bus_max_devs);
+
+    printd("rmmod successfully/n");
 }
 
 

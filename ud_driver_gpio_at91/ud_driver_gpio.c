@@ -330,6 +330,7 @@ static int __init ud_gpio_module_init (void)
         }
     }
 
+    printd("insmod successfully/n");
     return (0);
 
     fail : ud_gpio_module_exit();
@@ -351,6 +352,8 @@ static void __exit ud_gpio_module_exit (void)
     }
 
     unregister_chrdev_region(x_dev, i32_gpio_max_devs);
+
+    printd("rmmod successfully/n");
 }
 
 //使其他模块可以调用GPIO的驱动
