@@ -20,10 +20,37 @@
 #include <linux/proc_fs.h>
 #include <linux/fcntl.h>
 #include <linux/seq_file.h>
+#include <linux/spinlock.h>
 
 #include <asm/uaccess.h>
 
 #include "../include/ud_device_bus_emulated.h"
+
+struct bus_io
+{
+    //模拟总线固有延时
+    unsigned char       u8_bus_io_delay;
+    //片选脚配置
+    struct gpio_struct  x_bus_io_cs;
+    //输出使能脚配置
+    struct gpio_struct  x_bus_io_oe;
+    //写操作使能脚配置
+    struct gpio_struct  x_bus_io_we;
+    //总线地址IO脚配置
+    struct gpio_struct  x_p_bus_io_addr[UD_BUS_ADDR_BIT];
+    //总线数据IO脚配置
+    struct gpio_struct  x_p_bus_io_data[UD_BUS_DATA_BIT];
+};
+
+struct bus_dev
+{
+    //总线配置
+    struct bus_io       x_bus_io;
+    //自旋锁
+    spinlock_t          x_spinlock;
+    //cdev
+    struct cdev         x_cdev;
+};
 
 //主设备号
 int i32_bus_major = UD_BUS_MAJOR;

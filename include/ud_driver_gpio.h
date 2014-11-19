@@ -2,8 +2,6 @@
 #define __UD_DRIVER_GPIO__
 
 #include <linux/ioctl.h>
-#include <linux/spinlock.h>
-
 
 #ifndef __UD_PRINT__
 #define __UD_PRINT__
@@ -104,19 +102,5 @@ struct gpio_struct
     //引脚输入输出值(low,high)
     enum gpio_enum_value    x_value;
 };
-
-struct gpio_dev
-{
-    //自旋锁
-    spinlock_t x_spinlock;
-    //cdev
-    struct cdev x_cdev;
-};
-
-int ud_gpio_open(struct inode * x_p_inode, struct file * x_p_file);
-int ud_gpio_release(struct inode * x_p_inode, struct file * x_p_file);
-ssize_t ud_gpio_read(struct file * x_p_file, char __user * i8_p_buf, size_t x_count, loff_t * x_p_pos);
-ssize_t ud_gpio_write(struct file * x_p_file, const char __user * i8_p_buf, size_t x_count, loff_t * x_p_pos);
-long ud_gpio_ioctl(struct file * x_p_file, unsigned int u32_cmd, unsigned long u32_arg);
 
 #endif

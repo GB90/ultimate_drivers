@@ -43,35 +43,4 @@ struct bus_struct
     unsigned long   u32_bus_data;
 };
 
-struct bus_io
-{
-    //模拟总线固有延时
-    unsigned char       u8_bus_io_delay;
-    //片选脚配置
-    struct gpio_struct  x_bus_io_cs;
-    //输出使能脚配置
-    struct gpio_struct  x_bus_io_oe;
-    //写操作使能脚配置
-    struct gpio_struct  x_bus_io_we;
-    //总线地址IO脚配置
-    struct gpio_struct  x_p_bus_io_addr[UD_BUS_ADDR_BIT];
-    //总线数据IO脚配置
-    struct gpio_struct  x_p_bus_io_data[UD_BUS_DATA_BIT];
-};
-
-struct bus_dev
-{
-    //总线配置
-    struct bus_io       x_bus_io;
-    //自旋锁
-    spinlock_t          x_spinlock;
-    //cdev
-    struct cdev         x_cdev;
-};
-
-int ud_bus_open(struct inode * x_p_inode, struct file * x_p_file);
-int ud_bus_release(struct inode * x_p_inode, struct file * x_p_file);
-ssize_t ud_bus_read(struct file * x_p_file, char __user * i8_p_buf, size_t x_count, loff_t * x_p_pos);
-ssize_t ud_bus_write(struct file * x_p_file, const char __user * i8_p_buf, size_t x_count, loff_t * x_p_pos);
-
 #endif

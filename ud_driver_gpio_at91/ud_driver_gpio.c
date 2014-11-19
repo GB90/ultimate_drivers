@@ -20,6 +20,7 @@
 #include <linux/proc_fs.h>
 #include <linux/fcntl.h>
 #include <linux/seq_file.h>
+#include <linux/spinlock.h>
 
 #include <mach/gpio.h>
 #include <mach/at91_pmc.h>
@@ -28,6 +29,14 @@
 #include <asm/uaccess.h>
 
 #include "../include/ud_driver_gpio.h"
+
+struct gpio_dev
+{
+    //自旋锁
+    spinlock_t x_spinlock;
+    //cdev
+    struct cdev x_cdev;
+};
 
 //主设备号
 int i32_gpio_major = UD_GPIO_MAJOR;
