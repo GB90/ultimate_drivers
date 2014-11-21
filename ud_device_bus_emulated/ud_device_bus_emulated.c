@@ -29,7 +29,7 @@
 struct bus_io
 {
     //模拟总线固有延时
-    unsigned char       u8_bus_io_delay;
+    unsigned int        u32_bus_io_delay;
     //片选脚配置
     struct gpio_struct  x_bus_io_cs;
     //输出使能脚配置
@@ -180,13 +180,14 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         }
 
         //oe高：输出禁能，we低：写使能，cs低->cs高
+        ud_bus_delay(x_p_devices->x_bus_io.u32_bus_io_delay);
         x_p_devices->x_bus_io.x_bus_io_oe.x_value = UD_GPIO_VALUE_HIGH;
         ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_oe));
         x_p_devices->x_bus_io.x_bus_io_we.x_value = UD_GPIO_VALUE_LOW;
         ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_we));
         x_p_devices->x_bus_io.x_bus_io_cs.x_value = UD_GPIO_VALUE_LOW;
         ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_cs));
-        ud_bus_delay(x_p_devices->x_bus_io.u8_bus_io_delay);
+        ud_bus_delay(x_p_devices->x_bus_io.u32_bus_io_delay);
         x_p_devices->x_bus_io.x_bus_io_cs.x_value = UD_GPIO_VALUE_HIGH;
         ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_cs));
 
@@ -226,7 +227,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_we));
         x_p_devices->x_bus_io.x_bus_io_cs.x_value = UD_GPIO_VALUE_LOW;
         ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_cs));
-        ud_bus_delay(x_p_devices->x_bus_io.u8_bus_io_delay);
+        ud_bus_delay(x_p_devices->x_bus_io.u32_bus_io_delay);
 
         for (i = UD_BUS_DATA_BIT - 1; i >= 0; i--)
         {
@@ -301,12 +302,12 @@ static int __init ud_bus_module_init (void)
 
     for (i = 0; i < i32_bus_max_devs; i++)
     {
-        x_p_bus_devices[i].x_bus_io.u8_bus_io_delay = 10;
+        x_p_bus_devices[i].x_bus_io.u32_bus_io_delay = 1000;
 
         x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_port = UD_GPIO_PORT_A;
         x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_pin = UD_GPIO_PIN_29;
         x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_dir = UD_GPIO_DIR_OUTPUT;
-        x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_value = UD_GPIO_VALUE_LOW;
+        x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_value = UD_GPIO_VALUE_HIGH;
         if (ud_gpio_export_set_dir(&(x_p_bus_devices[i].x_bus_io.x_bus_io_cs)) != 0)
         {
             printd("gpio error");
@@ -317,7 +318,7 @@ static int __init ud_bus_module_init (void)
         x_p_bus_devices[i].x_bus_io.x_bus_io_oe.x_port = UD_GPIO_PORT_A;
         x_p_bus_devices[i].x_bus_io.x_bus_io_oe.x_pin = UD_GPIO_PIN_31;
         x_p_bus_devices[i].x_bus_io.x_bus_io_oe.x_dir = UD_GPIO_DIR_OUTPUT;
-        x_p_bus_devices[i].x_bus_io.x_bus_io_oe.x_value = UD_GPIO_VALUE_LOW;
+        x_p_bus_devices[i].x_bus_io.x_bus_io_oe.x_value = UD_GPIO_VALUE_HIGH;
         if (ud_gpio_export_set_dir(&(x_p_bus_devices[i].x_bus_io.x_bus_io_oe)) != 0)
         {
             printd("gpio error");
