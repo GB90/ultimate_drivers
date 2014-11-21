@@ -138,7 +138,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
 
     switch (u32_cmd)
     {
-    case UD_BUS_CMD_SET_ADDR :
+    case UD_BUS_CMD_SET_DATA :
 
         u32_temp = x_p_bus->u32_bus_addr;
 
@@ -157,9 +157,6 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
             ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_p_bus_io_addr[i]));
             u32_temp >>= 1;
         }
-
-        break;
-    case UD_BUS_CMD_SET_DATA :
 
         u32_temp = x_p_bus->u32_bus_data;
 
@@ -194,6 +191,23 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
 
         break;
     case UD_BUS_CMD_GET_DATA :
+        u32_temp = x_p_bus->u32_bus_addr;
+
+        //逐位设置每个对应地址参数IO脚的电平
+        for (i = 0; i < UD_BUS_ADDR_BIT; i++)
+        {
+            if (u32_temp & 0x00000001)
+            {
+                x_p_devices->x_bus_io.x_p_bus_io_addr[i].x_value = UD_GPIO_VALUE_HIGH;
+            }
+            else
+            {
+                x_p_devices->x_bus_io.x_p_bus_io_addr[i].x_value = UD_GPIO_VALUE_LOW;
+            }
+
+            ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_p_bus_io_addr[i]));
+            u32_temp >>= 1;
+        }
 
         u32_temp = x_p_bus->u32_bus_data;
 
@@ -265,6 +279,7 @@ static int __init ud_bus_module_init (void)
     {
         i32_result = alloc_chrdev_region(&x_dev, i32_bus_minor, i32_bus_max_devs, "ud_bus");
         i32_bus_major = MAJOR(x_dev);
+        printd("dev major is %d\n", i32_bus_major);
     }
 
     if (i32_result < 0)
@@ -285,7 +300,7 @@ static int __init ud_bus_module_init (void)
 
     for (i = 0; i < i32_bus_max_devs; i++)
     {
-        x_p_bus_devices[i].x_bus_io.u8_bus_io_delay = 1;
+        x_p_bus_devices[i].x_bus_io.u8_bus_io_delay = 2;
 
         x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_port = UD_GPIO_PORT_A;
         x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_pin = UD_GPIO_PIN_29;

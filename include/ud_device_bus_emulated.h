@@ -23,9 +23,10 @@
 #endif
 
 #define UD_BUS_IOC_MAGIC  'b'
-#define UD_BUS_CMD_SET_ADDR  _IO(UD_GPIO_IOC_MAGIC, 0)
-#define UD_BUS_CMD_SET_DATA  _IO(UD_GPIO_IOC_MAGIC, 1)
-#define UD_BUS_CMD_GET_DATA  _IO(UD_GPIO_IOC_MAGIC, 2)
+//modify-2014.11.21 优化了ioctl操作，现在不需要单独设置地址
+//#define UD_BUS_CMD_SET_ADDR  _IO(UD_GPIO_IOC_MAGIC, 0)
+#define UD_BUS_CMD_SET_DATA  _IO(UD_GPIO_IOC_MAGIC, 0)
+#define UD_BUS_CMD_GET_DATA  _IO(UD_GPIO_IOC_MAGIC, 1)
 
 #ifndef UD_BUS_ADDR_BIT
 #define UD_BUS_ADDR_BIT    (3)
