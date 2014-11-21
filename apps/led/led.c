@@ -18,7 +18,7 @@
 
 int main(void)
 {
-    int i32_fd;
+    int i32_fd, i = 10;
     int i32_result = EXIT_SUCCESS;
     struct bus_struct x_bus;
 
@@ -29,9 +29,18 @@ int main(void)
         i32_result = -1;
     }
 
-    x_bus.u32_bus_addr = 0x1;
-    x_bus.u32_bus_data = 0xff;
-    ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
+    while(i--)
+    {
+        x_bus.u32_bus_addr = 0x02;
+        x_bus.u32_bus_data = 0xff;
+        ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
+        sleep(1);
+
+        x_bus.u32_bus_addr = 0x02;
+        x_bus.u32_bus_data = 0x00;
+        ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
+        sleep(1);
+    }
 
     close(i32_fd);
 
