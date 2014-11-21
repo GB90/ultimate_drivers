@@ -175,6 +175,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
             }
 
             ud_gpio_export_set_dir(&(x_p_devices->x_bus_io.x_p_bus_io_data[i]));
+            ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_p_bus_io_data[i]));
             u32_temp >>= 1;
         }
 

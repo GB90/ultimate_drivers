@@ -35,11 +35,13 @@ int main(void)
         x_bus.u32_bus_data = 0xff;
         ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
         sleep(1);
+        printf("on\n");
 
         x_bus.u32_bus_addr = 0x02;
         x_bus.u32_bus_data = 0x00;
         ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
         sleep(1);
+        printf("off\n");
     }
 
     close(i32_fd);
