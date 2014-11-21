@@ -153,7 +153,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
             {
                 x_p_devices->x_bus_io.x_p_bus_io_addr[i].x_value = UD_GPIO_VALUE_LOW;
             }
-
+            printd("add%d:%d",i,x_p_devices->x_bus_io.x_p_bus_io_addr[i].x_value);
             ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_p_bus_io_addr[i]));
             u32_temp >>= 1;
         }
@@ -173,9 +173,9 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
             {
                 x_p_devices->x_bus_io.x_p_bus_io_data[i].x_value = UD_GPIO_VALUE_LOW;
             }
-
+            printd("dat%d:%d",i,x_p_devices->x_bus_io.x_p_bus_io_data[i].x_value);
             ud_gpio_export_set_dir(&(x_p_devices->x_bus_io.x_p_bus_io_data[i]));
-            ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_p_bus_io_data[i]));
+            //ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_p_bus_io_data[i]));
             u32_temp >>= 1;
         }
 
@@ -301,7 +301,7 @@ static int __init ud_bus_module_init (void)
 
     for (i = 0; i < i32_bus_max_devs; i++)
     {
-        x_p_bus_devices[i].x_bus_io.u8_bus_io_delay = 2;
+        x_p_bus_devices[i].x_bus_io.u8_bus_io_delay = 10;
 
         x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_port = UD_GPIO_PORT_A;
         x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_pin = UD_GPIO_PIN_29;
