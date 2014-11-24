@@ -62,6 +62,7 @@ unsigned int ud_gpio_get_pin (struct gpio_struct * x_p_gpio);
 int ud_gpio_export_set_dir (struct gpio_struct * x_p_gpio);
 int ud_gpio_export_set_value (struct gpio_struct * x_p_gpio);
 int ud_gpio_export_get_value (struct gpio_struct * x_p_gpio);
+int ud_gpio_export_trigger (struct gpio_struct * x_p_gpio);
 
 /*
  * 获取GPIO的引脚地址
@@ -119,7 +120,9 @@ int ud_gpio_export_set_dir (struct gpio_struct * x_p_gpio)
         return (-EIO);
     }
 
-    if (x_p_gpio->x_dir)
+    //modify-2014.11.24 修复了一个初始化GPIO的BUG,需要设置GPIO引脚复用功能
+    at91_set_GPIO_periph(u32_port_pin, x_p_gpio->x_pullup);
+    if (x_p_gpio->x_dir == UD_GPIO_DIR_OUTPUT)
     {
         at91_set_gpio_output(u32_port_pin, x_p_gpio->x_value);
     }
@@ -174,7 +177,37 @@ int ud_gpio_export_get_value (struct gpio_struct * x_p_gpio)
     {
         x_p_gpio->x_value = UD_GPIO_VALUE_HIGH;
     }
+    return (0);
+}
 
+/*
+ * 输出取反电平
+ * 输入：struct gpio_struct *
+ * 输出：-EIO（出错），0（正常）
+ */
+int ud_gpio_export_trigger (struct gpio_struct * x_p_gpio)
+{
+    unsigned int u32_port_pin;
+
+    u32_port_pin = ud_gpio_get_pin(x_p_gpio);
+    if (u32_port_pin == -EIO)
+    {
+        return (-EIO);
+    }
+
+    if(x_p_gpio->x_dir == UD_GPIO_DIR_OUTPUT)
+    {
+        if (at91_get_gpio_value(u32_port_pin) == 0)
+        {
+            x_p_gpio->x_value = UD_GPIO_VALUE_HIGH;
+            at91_set_gpio_value(u32_port_pin, 1);
+        }
+        else
+        {
+            x_p_gpio->x_value = UD_GPIO_VALUE_LOW;
+            at91_set_gpio_value(u32_port_pin, 0);
+        }
+    }
     return (0);
 }
 
@@ -256,6 +289,13 @@ long ud_gpio_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long 
         {
             printd("copy error \n");
             i32_result = -EPERM;
+            goto fail0;
+        }
+        break;
+    case UD_GPIO_CMD_TRIGGER :
+        if (ud_gpio_export_trigger(x_p_gpio) == -EIO)
+        {
+            i32_result = -EIO;
             goto fail0;
         }
         break;
@@ -361,6 +401,7 @@ static void __exit ud_gpio_module_exit (void)
 EXPORT_SYMBOL(ud_gpio_export_set_dir);
 EXPORT_SYMBOL(ud_gpio_export_set_value);
 EXPORT_SYMBOL(ud_gpio_export_get_value);
+EXPORT_SYMBOL(ud_gpio_export_trigger);
 
 module_init(ud_gpio_module_init);
 module_exit(ud_gpio_module_exit);

@@ -302,7 +302,7 @@ static int __init ud_bus_module_init (void)
 
     for (i = 0; i < i32_bus_max_devs; i++)
     {
-        x_p_bus_devices[i].x_bus_io.u32_bus_io_delay = 1000;
+        x_p_bus_devices[i].x_bus_io.u32_bus_io_delay = 2;
 
         x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_port = UD_GPIO_PORT_A;
         x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_pin = UD_GPIO_PIN_29;
