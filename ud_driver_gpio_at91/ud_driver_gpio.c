@@ -1,4 +1,5 @@
 /*
+ * modify-2014.11.25 引入了断言机制，优化了输入参数
  * modify-2014.11.18 ultimate_drivers/ud_driver_gpio_at91/ud_driver_gpio.c
  * 依据多设备驱动的模型构建，由于GPIO本身不具备多设备意义，故此处该做法没有实际意义，算是一种尝试
  * 提供了open,release,write,read,ioctl接口，作为最底层的驱动模块，经常会被其他驱动模块所使用，故提供了export_symbol接口
@@ -22,13 +23,14 @@
 #include <linux/seq_file.h>
 #include <linux/spinlock.h>
 
-#include <mach/gpio.h>
 #include <mach/at91_pmc.h>
 #include <mach/at91_pio.h>
+#include <mach/gpio.h>
 
 #include <asm/uaccess.h>
 
 #include "../include/ud_driver_gpio.h"
+#include "../include/common.h"
 
 struct gpio_dev
 {
@@ -57,53 +59,10 @@ struct gpio_dev * x_p_gpio_devices;
 static void __exit ud_gpio_module_exit (void);
 static int __init ud_gpio_module_init (void);
 
-unsigned int ud_gpio_get_pin (struct gpio_struct * x_p_gpio);
-
 int ud_gpio_export_set_dir (struct gpio_struct * x_p_gpio);
 int ud_gpio_export_set_value (struct gpio_struct * x_p_gpio);
 int ud_gpio_export_get_value (struct gpio_struct * x_p_gpio);
 int ud_gpio_export_trigger (struct gpio_struct * x_p_gpio);
-
-/*
- * 获取GPIO的引脚地址
- * 输入：struct gpio_struct *
- * 输出：-EIO（出错），port_pin（正常）
- */
-unsigned int ud_gpio_get_pin (struct gpio_struct * x_p_gpio)
-{
-    unsigned int u32_port_pin;
-
-    if (x_p_gpio->x_pin > 31)
-    {
-        printd("pin error \n");
-        u32_port_pin = -EIO;
-        return (u32_port_pin);
-    }
-
-    switch (x_p_gpio->x_port)
-    {
-    case 0 :
-        u32_port_pin = PIN_BASE + 0x00 + x_p_gpio->x_pin;
-        break;
-    case 1 :
-        u32_port_pin = PIN_BASE + 0x20 + x_p_gpio->x_pin;
-        break;
-    case 2 :
-        u32_port_pin = PIN_BASE + 0x40 + x_p_gpio->x_pin;
-        break;
-    case 3 :
-        u32_port_pin = PIN_BASE + 0x60 + x_p_gpio->x_pin;
-        break;
-    case 4 :
-        u32_port_pin = PIN_BASE + 0x80 + x_p_gpio->x_pin;
-        break;
-    default :
-        printd("port error \n");
-        u32_port_pin = -EIO;
-    }
-
-    return (u32_port_pin);
-}
 
 /*
  * 设置引脚方向
@@ -112,23 +71,23 @@ unsigned int ud_gpio_get_pin (struct gpio_struct * x_p_gpio)
  */
 int ud_gpio_export_set_dir (struct gpio_struct * x_p_gpio)
 {
-    unsigned int u32_port_pin;
-
-    u32_port_pin = ud_gpio_get_pin(x_p_gpio);
-    if (u32_port_pin == -EIO)
+    if(is_not_gpio_pin(x_p_gpio->x_pin))
     {
-        return (-EIO);
+        return (0);
     }
+    assertd(is_not_gpio_dir(x_p_gpio->x_dir));
+    assertd(is_not_gpio_pullup(x_p_gpio->x_pullup));
+    assertd(is_not_gpio_value(x_p_gpio->x_value));
 
     //modify-2014.11.24 修复了一个初始化GPIO的BUG,需要设置GPIO引脚复用功能
-    at91_set_GPIO_periph(u32_port_pin, x_p_gpio->x_pullup);
+    at91_set_GPIO_periph(x_p_gpio->x_pin, x_p_gpio->x_pullup);
     if (x_p_gpio->x_dir == UD_GPIO_DIR_OUTPUT)
     {
-        at91_set_gpio_output(u32_port_pin, x_p_gpio->x_value);
+        at91_set_gpio_output(x_p_gpio->x_pin, x_p_gpio->x_value);
     }
     else
     {
-        at91_set_gpio_input(u32_port_pin, x_p_gpio->x_pullup);
+        at91_set_gpio_input(x_p_gpio->x_pin, x_p_gpio->x_pullup);
     }
 
     return (0);
@@ -141,15 +100,13 @@ int ud_gpio_export_set_dir (struct gpio_struct * x_p_gpio)
  */
 int ud_gpio_export_set_value (struct gpio_struct * x_p_gpio)
 {
-    unsigned int u32_port_pin;
-
-    u32_port_pin = ud_gpio_get_pin(x_p_gpio);
-    if (u32_port_pin == -EIO)
+    if(is_not_gpio_pin(x_p_gpio->x_pin))
     {
-        return (-EIO);
+        return (0);
     }
+    assertd(is_not_gpio_value(x_p_gpio->x_value));
 
-    at91_set_gpio_value(u32_port_pin, x_p_gpio->x_value);
+    at91_set_gpio_value(x_p_gpio->x_pin, x_p_gpio->x_value);
 
     return (0);
 }
@@ -161,15 +118,12 @@ int ud_gpio_export_set_value (struct gpio_struct * x_p_gpio)
  */
 int ud_gpio_export_get_value (struct gpio_struct * x_p_gpio)
 {
-    unsigned int u32_port_pin;
-
-    u32_port_pin = ud_gpio_get_pin(x_p_gpio);
-    if (u32_port_pin == -EIO)
+    if(is_not_gpio_pin(x_p_gpio->x_pin))
     {
-        return (-EIO);
+        return (0);
     }
 
-    if (at91_get_gpio_value(u32_port_pin) == 0)
+    if (at91_get_gpio_value(x_p_gpio->x_pin) == 0)
     {
         x_p_gpio->x_value = UD_GPIO_VALUE_LOW;
     }
@@ -187,25 +141,23 @@ int ud_gpio_export_get_value (struct gpio_struct * x_p_gpio)
  */
 int ud_gpio_export_trigger (struct gpio_struct * x_p_gpio)
 {
-    unsigned int u32_port_pin;
-
-    u32_port_pin = ud_gpio_get_pin(x_p_gpio);
-    if (u32_port_pin == -EIO)
+    if(is_not_gpio_pin(x_p_gpio->x_pin))
     {
-        return (-EIO);
+        return (0);
     }
+    assertd(is_not_gpio_dir(x_p_gpio->x_dir));
 
     if(x_p_gpio->x_dir == UD_GPIO_DIR_OUTPUT)
     {
-        if (at91_get_gpio_value(u32_port_pin) == 0)
+        if (at91_get_gpio_value(x_p_gpio->x_pin) == 0)
         {
             x_p_gpio->x_value = UD_GPIO_VALUE_HIGH;
-            at91_set_gpio_value(u32_port_pin, 1);
+            at91_set_gpio_value(x_p_gpio->x_pin, 1);
         }
         else
         {
             x_p_gpio->x_value = UD_GPIO_VALUE_LOW;
-            at91_set_gpio_value(u32_port_pin, 0);
+            at91_set_gpio_value(x_p_gpio->x_pin, 0);
         }
     }
     return (0);

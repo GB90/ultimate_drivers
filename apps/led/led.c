@@ -18,28 +18,45 @@
 
 int main(void)
 {
-    int i32_fd;
+    int i32_fd, i;
     int i32_result = EXIT_SUCCESS;
-    struct bus_struct x_bus;
+    struct bus_struct x_bus = {
+        .x_io.u32_bus_io_delay = 2,
+        .x_io.x_bus_io_cs = UD_PIN_PA29,
+        .x_io.x_bus_io_oe = UD_PIN_PA31,
+        .x_io.x_bus_io_we = UD_PIN_PA25,
+        .x_io.x_p_bus_io_addr[0] = UD_PIN_PA28,
+        .x_io.x_p_bus_io_addr[1] = UD_PIN_PA26,
+        .x_io.x_p_bus_io_addr[2] = UD_PIN_PA22,
+        .x_io.x_p_bus_io_data[0] = UD_PIN_PD14,
+        .x_io.x_p_bus_io_data[1] = UD_PIN_PD15,
+        .x_io.x_p_bus_io_data[2] = UD_PIN_PD16,
+        .x_io.x_p_bus_io_data[3] = UD_PIN_PD17,
+        .x_io.x_p_bus_io_data[4] = UD_PIN_PD18,
+        .x_io.x_p_bus_io_data[5] = UD_PIN_PD19,
+        .x_io.x_p_bus_io_data[6] = UD_PIN_PD20,
+        .x_io.x_p_bus_io_data[7] = UD_PIN_PD21,
+    };
 
     i32_fd = open("/dev/ud_bus", O_RDWR);
     if(i32_fd < 0)
     {
         printf("open bus fail\n");
         i32_result = -1;
+        close(i32_fd);
+        return (i32_result);
     }
 
-    x_bus.u32_bus_addr = 0x02;
-    x_bus.u32_bus_data = 0xf0;
-    ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
-    printf("0xf0\n");
-    sleep(15);
+    ioctl(i32_fd, UD_BUS_CMD_INIT, &x_bus);
 
-    x_bus.u32_bus_addr = 0x02;
-    x_bus.u32_bus_data = 0x0f;
-    ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
-    printf("0x0f\n");
-    sleep(15);
+    i = 65535;
+    while(i --)
+    {
+        x_bus.u32_bus_addr = 0x02;
+        x_bus.u32_bus_data = i%8;
+        ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
+        sleep(1);
+    }
 
     close(i32_fd);
 

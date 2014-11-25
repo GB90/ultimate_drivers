@@ -1,4 +1,5 @@
 /*
+ * modify-2014.11.25 优化了总线接口，仔细想了一下，其实总线没有必要支持多设备，因为一条总线理论上可以挂无限多的设备
  * modify-2014.11.18 ultimate_drivers/ud_device_bus_emulated/ud_device_bus_emulated.c
  * 依据多设备驱动的模型构建，本来是想做成多设备的，而且模拟总线支持多设备也是理所当然的
  * 但是实际运用中，由于模拟总线需要的参数太多，故放弃了多设备的想法
@@ -25,27 +26,10 @@
 #include <asm/uaccess.h>
 
 #include "../include/ud_device_bus_emulated.h"
-
-struct bus_io
-{
-    //模拟总线固有延时
-    unsigned int        u32_bus_io_delay;
-    //片选脚配置
-    struct gpio_struct  x_bus_io_cs;
-    //输出使能脚配置
-    struct gpio_struct  x_bus_io_oe;
-    //写操作使能脚配置
-    struct gpio_struct  x_bus_io_we;
-    //总线地址IO脚配置
-    struct gpio_struct  x_p_bus_io_addr[UD_BUS_ADDR_BIT];
-    //总线数据IO脚配置
-    struct gpio_struct  x_p_bus_io_data[UD_BUS_DATA_BIT];
-};
+#include "../include/common.h"
 
 struct bus_dev
 {
-    //总线配置
-    struct bus_io       x_bus_io;
     //自旋锁
     spinlock_t          x_spinlock;
     //cdev
@@ -114,6 +98,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
 
     struct bus_dev * x_p_devices;
     struct bus_struct * x_p_bus;
+    struct gpio_struct x_tmp_gpio;
 
     x_p_devices = (struct bus_dev *) x_p_file->private_data;
     //锁定
@@ -138,6 +123,35 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
 
     switch (u32_cmd)
     {
+    case UD_BUS_CMD_INIT :
+
+        x_tmp_gpio.x_dir = UD_GPIO_DIR_OUTPUT;
+        x_tmp_gpio.x_pullup = UD_GPIO_PULLUP_OFF;
+
+        x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
+        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
+        ud_gpio_export_set_dir(&x_tmp_gpio);
+
+        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_oe;
+        ud_gpio_export_set_dir(&x_tmp_gpio);
+
+        x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
+        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_we;
+        ud_gpio_export_set_dir(&x_tmp_gpio);
+
+        for(i = 0; i<UD_BUS_ADDR_BIT; i++)
+        {
+            x_tmp_gpio.x_pin = x_p_bus->x_io.x_p_bus_io_addr[i];
+            ud_gpio_export_set_dir(&x_tmp_gpio);
+        }
+
+        for(i = 0; i<UD_BUS_DATA_BIT; i++)
+        {
+            x_tmp_gpio.x_pin = x_p_bus->x_io.x_p_bus_io_data[i];
+            ud_gpio_export_set_dir(&x_tmp_gpio);
+        }
+
+        break;
     case UD_BUS_CMD_SET_DATA :
 
         u32_temp = x_p_bus->u32_bus_addr;
@@ -145,102 +159,114 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         //逐位设置每个对应地址参数IO脚的电平
         for (i = 0; i < UD_BUS_ADDR_BIT; i++)
         {
+            x_tmp_gpio.x_pin = x_p_bus->x_io.x_p_bus_io_addr[i];
             if (u32_temp & 0x00000001)
             {
-                x_p_devices->x_bus_io.x_p_bus_io_addr[i].x_value = UD_GPIO_VALUE_HIGH;
+                x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
             }
             else
             {
-                x_p_devices->x_bus_io.x_p_bus_io_addr[i].x_value = UD_GPIO_VALUE_LOW;
+                x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
             }
-            printd("add%d:%d",i,x_p_devices->x_bus_io.x_p_bus_io_addr[i].x_value);
-            ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_p_bus_io_addr[i]));
+            ud_gpio_export_set_value(&x_tmp_gpio);
             u32_temp >>= 1;
         }
 
         u32_temp = x_p_bus->u32_bus_data;
 
+        x_tmp_gpio.x_dir = UD_GPIO_DIR_OUTPUT;
+        x_tmp_gpio.x_pullup = UD_GPIO_PULLUP_OFF;
         //逐位设置每个对应数据参数IO脚的电平，IO口统一设置为输出
         for (i = 0; i < UD_BUS_DATA_BIT; i++)
         {
-            x_p_devices->x_bus_io.x_p_bus_io_data[i].x_dir = UD_GPIO_DIR_OUTPUT;
+            x_tmp_gpio.x_pin = x_p_bus->x_io.x_p_bus_io_data[i];
 
             if (u32_temp & 0x00000001)
             {
-                x_p_devices->x_bus_io.x_p_bus_io_data[i].x_value = UD_GPIO_VALUE_HIGH;
+                x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
             }
             else
             {
-                x_p_devices->x_bus_io.x_p_bus_io_data[i].x_value = UD_GPIO_VALUE_LOW;
+                x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
             }
-            printd("dat%d:%d",i,x_p_devices->x_bus_io.x_p_bus_io_data[i].x_value);
-            ud_gpio_export_set_dir(&(x_p_devices->x_bus_io.x_p_bus_io_data[i]));
-            //ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_p_bus_io_data[i]));
+            ud_gpio_export_set_dir(&x_tmp_gpio);
             u32_temp >>= 1;
         }
 
         //oe高：输出禁能，we低：写使能，cs低->cs高
-        ud_bus_delay(x_p_devices->x_bus_io.u32_bus_io_delay);
-        x_p_devices->x_bus_io.x_bus_io_oe.x_value = UD_GPIO_VALUE_HIGH;
-        ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_oe));
-        x_p_devices->x_bus_io.x_bus_io_we.x_value = UD_GPIO_VALUE_LOW;
-        ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_we));
-        x_p_devices->x_bus_io.x_bus_io_cs.x_value = UD_GPIO_VALUE_LOW;
-        ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_cs));
-        ud_bus_delay(x_p_devices->x_bus_io.u32_bus_io_delay);
-        x_p_devices->x_bus_io.x_bus_io_cs.x_value = UD_GPIO_VALUE_HIGH;
-        ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_cs));
+        ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
+        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_oe;
+        x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
+        ud_gpio_export_set_dir(&x_tmp_gpio);
+        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_we;
+        x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
+        ud_gpio_export_set_dir(&x_tmp_gpio);
+        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
+        x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
+        ud_gpio_export_set_dir(&x_tmp_gpio);
+        ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
+        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
+        x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
+        ud_gpio_export_set_dir(&x_tmp_gpio);
 
         break;
     case UD_BUS_CMD_GET_DATA :
+
         u32_temp = x_p_bus->u32_bus_addr;
 
         //逐位设置每个对应地址参数IO脚的电平
         for (i = 0; i < UD_BUS_ADDR_BIT; i++)
         {
+            x_tmp_gpio.x_pin = x_p_bus->x_io.x_p_bus_io_addr[i];
             if (u32_temp & 0x00000001)
             {
-                x_p_devices->x_bus_io.x_p_bus_io_addr[i].x_value = UD_GPIO_VALUE_HIGH;
+                x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
             }
             else
             {
-                x_p_devices->x_bus_io.x_p_bus_io_addr[i].x_value = UD_GPIO_VALUE_LOW;
+                x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
             }
-
-            ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_p_bus_io_addr[i]));
+            ud_gpio_export_set_value(&x_tmp_gpio);
             u32_temp >>= 1;
         }
 
         u32_temp = x_p_bus->u32_bus_data;
 
+        x_tmp_gpio.x_dir = UD_GPIO_DIR_INPUT;
+        x_tmp_gpio.x_pullup = UD_GPIO_PULLUP_OFF;
         //数据IO设置为输入
         for (i = 0; i < UD_BUS_DATA_BIT; i++)
         {
-            x_p_devices->x_bus_io.x_p_bus_io_data[i].x_dir = UD_GPIO_DIR_INPUT;
-            ud_gpio_export_set_dir(&(x_p_devices->x_bus_io.x_p_bus_io_data[i]));
+            x_tmp_gpio.x_pin = x_p_bus->x_io.x_p_bus_io_data[i];
+            ud_gpio_export_set_dir(&x_tmp_gpio);
         }
 
         //oe低：输出使能，we高：读使能，cs低->cs高
-        x_p_devices->x_bus_io.x_bus_io_oe.x_value = UD_GPIO_VALUE_LOW;
-        ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_oe));
-        x_p_devices->x_bus_io.x_bus_io_we.x_value = UD_GPIO_VALUE_HIGH;
-        ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_we));
-        x_p_devices->x_bus_io.x_bus_io_cs.x_value = UD_GPIO_VALUE_LOW;
-        ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_cs));
-        ud_bus_delay(x_p_devices->x_bus_io.u32_bus_io_delay);
+        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_oe;
+        x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
+        ud_gpio_export_set_dir(&x_tmp_gpio);
+        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_we;
+        x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
+        ud_gpio_export_set_dir(&x_tmp_gpio);
+        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
+        x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
+        ud_gpio_export_set_dir(&x_tmp_gpio);
+        ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
 
         for (i = UD_BUS_DATA_BIT - 1; i >= 0; i--)
         {
-            ud_gpio_export_get_value(&(x_p_devices->x_bus_io.x_p_bus_io_data[i]));
-            if (x_p_devices->x_bus_io.x_p_bus_io_data[i].x_value == UD_GPIO_VALUE_HIGH)
+            x_tmp_gpio.x_pin = x_p_bus->x_io.x_p_bus_io_data[i];
+            ud_gpio_export_get_value(&x_tmp_gpio);
+            if (x_tmp_gpio.x_value == UD_GPIO_VALUE_HIGH)
             {
                 u32_temp |= 0x00000001;
             }
             u32_temp <<= 1;
         }
 
-        x_p_devices->x_bus_io.x_bus_io_cs.x_value = UD_GPIO_VALUE_HIGH;
-        ud_gpio_export_set_value(&(x_p_devices->x_bus_io.x_bus_io_cs));
+        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
+        x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
+        ud_gpio_export_set_dir(&x_tmp_gpio);
 
         x_p_bus->u32_bus_data = u32_temp;
 
@@ -270,7 +296,7 @@ static int __init ud_bus_module_init (void)
 {
     int i32_result, i32_err;
     dev_t x_dev = 0;
-    int i, j;
+    int i;
 
     if (i32_bus_major)
     {
@@ -302,88 +328,6 @@ static int __init ud_bus_module_init (void)
 
     for (i = 0; i < i32_bus_max_devs; i++)
     {
-        x_p_bus_devices[i].x_bus_io.u32_bus_io_delay = 2;
-
-        x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_port = UD_GPIO_PORT_A;
-        x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_pin = UD_GPIO_PIN_29;
-        x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_dir = UD_GPIO_DIR_OUTPUT;
-        x_p_bus_devices[i].x_bus_io.x_bus_io_cs.x_value = UD_GPIO_VALUE_HIGH;
-        if (ud_gpio_export_set_dir(&(x_p_bus_devices[i].x_bus_io.x_bus_io_cs)) != 0)
-        {
-            printd("gpio error");
-            i32_result = -EIO;
-            goto fail;
-        }
-
-        x_p_bus_devices[i].x_bus_io.x_bus_io_oe.x_port = UD_GPIO_PORT_A;
-        x_p_bus_devices[i].x_bus_io.x_bus_io_oe.x_pin = UD_GPIO_PIN_31;
-        x_p_bus_devices[i].x_bus_io.x_bus_io_oe.x_dir = UD_GPIO_DIR_OUTPUT;
-        x_p_bus_devices[i].x_bus_io.x_bus_io_oe.x_value = UD_GPIO_VALUE_HIGH;
-        if (ud_gpio_export_set_dir(&(x_p_bus_devices[i].x_bus_io.x_bus_io_oe)) != 0)
-        {
-            printd("gpio error");
-            i32_result = -EIO;
-            goto fail;
-        }
-
-        x_p_bus_devices[i].x_bus_io.x_bus_io_we.x_port = UD_GPIO_PORT_A;
-        x_p_bus_devices[i].x_bus_io.x_bus_io_we.x_pin = UD_GPIO_PIN_25;
-        x_p_bus_devices[i].x_bus_io.x_bus_io_we.x_dir = UD_GPIO_DIR_OUTPUT;
-        x_p_bus_devices[i].x_bus_io.x_bus_io_we.x_value = UD_GPIO_VALUE_LOW;
-        if (ud_gpio_export_set_dir(&(x_p_bus_devices[i].x_bus_io.x_bus_io_we)) != 0)
-        {
-            printd("gpio error");
-            i32_result = -EIO;
-            goto fail;
-        }
-
-        x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[0].x_port = UD_GPIO_PORT_A;
-        x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[0].x_pin = UD_GPIO_PIN_28;
-        x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[0].x_dir = UD_GPIO_DIR_OUTPUT;
-        x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[0].x_value = UD_GPIO_VALUE_LOW;
-        if (ud_gpio_export_set_dir(&(x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[0])) != 0)
-        {
-            printd("gpio error");
-            i32_result = -EIO;
-            goto fail;
-        }
-
-        x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[1].x_port = UD_GPIO_PORT_A;
-        x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[1].x_pin = UD_GPIO_PIN_26;
-        x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[1].x_dir = UD_GPIO_DIR_OUTPUT;
-        x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[1].x_value = UD_GPIO_VALUE_LOW;
-        if (ud_gpio_export_set_dir(&(x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[1])) != 0)
-        {
-            printd("gpio error");
-            i32_result = -EIO;
-            goto fail;
-        }
-
-        x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[2].x_port = UD_GPIO_PORT_A;
-        x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[2].x_pin = UD_GPIO_PIN_22;
-        x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[2].x_dir = UD_GPIO_DIR_OUTPUT;
-        x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[2].x_value = UD_GPIO_VALUE_LOW;
-        if (ud_gpio_export_set_dir(&(x_p_bus_devices[i].x_bus_io.x_p_bus_io_addr[2])) != 0)
-        {
-            printd("gpio error");
-            i32_result = -EIO;
-            goto fail;
-        }
-
-        for (j = 0; j < UD_BUS_DATA_BIT; j++)
-        {
-            x_p_bus_devices[i].x_bus_io.x_p_bus_io_data[j].x_port = UD_GPIO_PORT_D;
-            x_p_bus_devices[i].x_bus_io.x_p_bus_io_data[j].x_pin = UD_GPIO_PIN_14 + j;
-            x_p_bus_devices[i].x_bus_io.x_p_bus_io_data[j].x_dir = UD_GPIO_DIR_OUTPUT;
-            x_p_bus_devices[i].x_bus_io.x_p_bus_io_data[j].x_value = UD_GPIO_VALUE_LOW;
-            if (ud_gpio_export_set_dir(&(x_p_bus_devices[i].x_bus_io.x_p_bus_io_data[j])) != 0)
-            {
-                printd("gpio error");
-                i32_result = -EIO;
-                goto fail;
-            }
-        }
-
         spin_lock_init(&x_p_bus_devices[i].x_spinlock);
 
         x_dev = MKDEV(i32_bus_major, i32_bus_minor + i);
