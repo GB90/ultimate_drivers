@@ -18,7 +18,7 @@
 
 int main(void)
 {
-    int i32_fd, i;
+    int i32_fd, i, j;
     int i32_result = EXIT_SUCCESS;
     struct bus_struct x_bus = {
         .x_io.u32_bus_io_delay = 2,
@@ -50,10 +50,11 @@ int main(void)
     ioctl(i32_fd, UD_BUS_CMD_INIT, &x_bus);
 
     i = 65535;
+    j = 1;
     while(i --)
     {
         x_bus.u32_bus_addr = 0x02;
-        x_bus.u32_bus_data = i%8;
+        x_bus.u32_bus_data = (j<<(i%8))&0xff;
         ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
         sleep(1);
     }
