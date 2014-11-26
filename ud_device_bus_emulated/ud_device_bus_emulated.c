@@ -215,7 +215,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
         ud_gpio_export_set_value(&x_tmp_gpio);
 
-        ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
+        //ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
 
         x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
         x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
@@ -266,7 +266,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
         ud_gpio_export_set_value(&x_tmp_gpio);
 
-        ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
+        //ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
 
         x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
         x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
@@ -278,7 +278,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         {
             x_tmp_gpio.x_pin = x_p_bus->x_io.x_p_bus_io_data[UD_BUS_DATA_BIT - i - 1];
             ud_gpio_export_get_value(&x_tmp_gpio);
-            printd("bus %d : %d\n", i, x_tmp_gpio.x_value);
+            //printd("bus %d : %d\n", i, x_tmp_gpio.x_value);
             if (x_tmp_gpio.x_value == UD_GPIO_VALUE_HIGH)
             {
                 u32_temp |= 0x00000001;
@@ -289,6 +289,13 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         ud_bus_init(x_p_bus);
 
         x_p_bus->u32_bus_data = u32_temp;
+
+        if (0 != copy_from_user((struct bus_struct*) u32_arg, x_p_bus, sizeof(struct bus_struct)))
+        {
+            printd("copy error \n");
+            i32_result = -EPERM;
+            goto fail0;
+        }
         ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
 
         break;

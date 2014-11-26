@@ -64,19 +64,6 @@ int main(void)
         x_bus.u32_bus_addr = 0x02;
         ioctl(i32_fd, UD_BUS_CMD_GET_DATA, &x_bus);
         printf("io 0x%x\n", x_bus.u32_bus_data);
-//        if(x_bus.u32_bus_data != 0xff)
-//        {
-//            x_bus.u32_bus_addr = 0x04;
-//            x_bus.u32_bus_data = 0x83;
-//            ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
-//        }
-//        else
-//        {
-//            x_bus.u32_bus_addr = 0x04;
-//            x_bus.u32_bus_data = 0x80;
-//            ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
-//        }
-
         sleep(1);
     }
 
