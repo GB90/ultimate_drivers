@@ -87,7 +87,9 @@ int ud_gpio_export_set_dir (struct gpio_struct * x_p_gpio)
     }
     else
     {
+        at91_set_pulldown(x_p_gpio->x_pin, 0);
         at91_set_gpio_input(x_p_gpio->x_pin, x_p_gpio->x_pullup);
+        at91_set_deglitch(x_p_gpio->x_pin, 1);
     }
 
     return (0);
@@ -126,10 +128,12 @@ int ud_gpio_export_get_value (struct gpio_struct * x_p_gpio)
     if (at91_get_gpio_value(x_p_gpio->x_pin) == 0)
     {
         x_p_gpio->x_value = UD_GPIO_VALUE_LOW;
+        printd("get : 0\n");
     }
     else
     {
         x_p_gpio->x_value = UD_GPIO_VALUE_HIGH;
+        printd("get : 1\n");
     }
     return (0);
 }

@@ -143,7 +143,6 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
     case UD_BUS_CMD_INIT :
 
         x_tmp_gpio.x_dir = UD_GPIO_DIR_OUTPUT;
-        x_tmp_gpio.x_pullup = UD_GPIO_PULLUP_OFF;
 
         x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
         x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
@@ -191,7 +190,6 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         u32_temp = x_p_bus->u32_bus_data;
 
         x_tmp_gpio.x_dir = UD_GPIO_DIR_OUTPUT;
-        x_tmp_gpio.x_pullup = UD_GPIO_PULLUP_OFF;
         //逐位设置每个对应数据参数IO脚的电平，IO口统一设置为输出
         for (i = 0; i < UD_BUS_DATA_BIT; i++)
         {
@@ -252,7 +250,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         u32_temp = 0;
 
         x_tmp_gpio.x_dir = UD_GPIO_DIR_INPUT;
-        x_tmp_gpio.x_pullup = UD_GPIO_PULLUP_OFF;
+        x_tmp_gpio.x_pullup = UD_GPIO_PULLUP_ON;
         //数据IO设置为输入
         for (i = 0; i < UD_BUS_DATA_BIT; i++)
         {
