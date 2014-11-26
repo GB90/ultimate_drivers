@@ -283,7 +283,11 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
             {
                 u32_temp |= 0x00000001;
             }
+
+            if(i != 0)
+            {
             u32_temp <<= 1;
+            }
         }
 
         ud_bus_init(x_p_bus);
