@@ -48,15 +48,20 @@ int main(void)
     }
 
     ioctl(i32_fd, UD_BUS_CMD_INIT, &x_bus);
-
-    i = 65535;
     j = 1;
+    i = 32;
     while(i --)
     {
         x_bus.u32_bus_addr = 0x02;
-//        x_bus.u32_bus_data = (j<<(i%8))&0xff;
-//        ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
+        x_bus.u32_bus_data = (j<<(i%8))&0xff;
+        ioctl(i32_fd, UD_BUS_CMD_SET_DATA, &x_bus);
+        sleep(1);
+    }
 
+    i = 65535;
+    while(i --)
+    {
+        x_bus.u32_bus_addr = 0x02;
         ioctl(i32_fd, UD_BUS_CMD_GET_DATA, &x_bus);
         printf("io 0x%x\n", x_bus.u32_bus_data);
 //        if(x_bus.u32_bus_data != 0xff)

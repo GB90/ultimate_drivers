@@ -226,7 +226,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
 
         ud_bus_init(x_p_bus);
-        ud_gpio_export_set_value(&x_tmp_gpio);
+        ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
 
         break;
     case UD_BUS_CMD_GET_DATA :
@@ -290,7 +290,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         ud_bus_init(x_p_bus);
 
         x_p_bus->u32_bus_data = u32_temp;
-        ud_gpio_export_set_value(&x_tmp_gpio);
+        ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
 
         break;
     default :
