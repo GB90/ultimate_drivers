@@ -76,7 +76,6 @@ int ud_gpio_export_set_dir (struct gpio_struct * x_p_gpio)
         return (0);
     }
     assertd(is_not_gpio_dir(x_p_gpio->x_dir));
-    assertd(is_not_gpio_pullup(x_p_gpio->x_pullup));
     assertd(is_not_gpio_value(x_p_gpio->x_value));
 
     //modify-2014.11.24 修复了一个初始化GPIO的BUG,需要设置GPIO引脚复用功能
@@ -87,6 +86,8 @@ int ud_gpio_export_set_dir (struct gpio_struct * x_p_gpio)
     }
     else
     {
+        assertd(is_not_gpio_pullup(x_p_gpio->x_pullup));
+
         at91_set_pulldown(x_p_gpio->x_pin, 0);
         at91_set_gpio_input(x_p_gpio->x_pin, x_p_gpio->x_pullup);
         at91_set_deglitch(x_p_gpio->x_pin, 1);
