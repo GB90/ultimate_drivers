@@ -278,6 +278,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         {
             x_tmp_gpio.x_pin = x_p_bus->x_io.x_p_bus_io_data[UD_BUS_DATA_BIT - i - 1];
             ud_gpio_export_get_value(&x_tmp_gpio);
+            printd("bus %d : %d\n", i, x_tmp_gpio.x_value);
             if (x_tmp_gpio.x_value == UD_GPIO_VALUE_HIGH)
             {
                 u32_temp |= 0x00000001;
