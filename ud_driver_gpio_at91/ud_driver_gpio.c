@@ -240,7 +240,7 @@ long ud_gpio_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long 
             goto fail0;
         }
 
-        if (0 != copy_from_user((struct gpio_struct*) u32_arg, x_p_gpio, sizeof(struct gpio_struct)))
+        if (0 != copy_to_user((struct gpio_struct*) u32_arg, x_p_gpio, sizeof(struct gpio_struct)))
         {
             printd("copy error \n");
             i32_result = -EPERM;

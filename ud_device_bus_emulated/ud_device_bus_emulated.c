@@ -290,7 +290,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
 
         x_p_bus->u32_bus_data = u32_temp;
 
-        if (0 != copy_from_user((struct bus_struct*) u32_arg, x_p_bus, sizeof(struct bus_struct)))
+        if (0 != copy_to_user((struct bus_struct*) u32_arg, x_p_bus, sizeof(struct bus_struct)))
         {
             printd("copy error \n");
             i32_result = -EPERM;
