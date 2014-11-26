@@ -90,6 +90,23 @@ ssize_t ud_bus_write (struct file * x_p_file, const char __user * i8_p_buf, size
     return (0);
 }
 
+int ud_bus_init(struct bus_struct * x_p_bus)
+{
+    struct gpio_struct x_tmp_gpio;
+
+    x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
+    x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
+    ud_gpio_export_set_value(&x_tmp_gpio);
+
+    x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_oe;
+    ud_gpio_export_set_value(&x_tmp_gpio);
+
+    x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_we;
+    ud_gpio_export_set_value(&x_tmp_gpio);
+
+    return (0);
+}
+
 long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u32_arg)
 {
     long i32_result = 0;
@@ -135,7 +152,6 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_oe;
         ud_gpio_export_set_dir(&x_tmp_gpio);
 
-        x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
         x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_we;
         ud_gpio_export_set_dir(&x_tmp_gpio);
 
@@ -194,20 +210,22 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         }
 
         //oe高：输出禁能，we低：写使能，cs低->cs高
-        ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
         x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_oe;
         x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
-        ud_gpio_export_set_dir(&x_tmp_gpio);
+        ud_gpio_export_set_value(&x_tmp_gpio);
         x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_we;
         x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
-        ud_gpio_export_set_dir(&x_tmp_gpio);
+        ud_gpio_export_set_value(&x_tmp_gpio);
+
+        ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
+
         x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
         x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
-        ud_gpio_export_set_dir(&x_tmp_gpio);
+        ud_gpio_export_set_value(&x_tmp_gpio);
+
         ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
-        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
-        x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
-        ud_gpio_export_set_dir(&x_tmp_gpio);
+
+        ud_bus_init(x_p_bus);
 
         break;
     case UD_BUS_CMD_GET_DATA :
@@ -230,7 +248,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
             u32_temp >>= 1;
         }
 
-        u32_temp = x_p_bus->u32_bus_data;
+        u32_temp = 0;
 
         x_tmp_gpio.x_dir = UD_GPIO_DIR_INPUT;
         x_tmp_gpio.x_pullup = UD_GPIO_PULLUP_OFF;
@@ -244,18 +262,22 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
         //oe低：输出使能，we高：读使能，cs低->cs高
         x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_oe;
         x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
-        ud_gpio_export_set_dir(&x_tmp_gpio);
+        ud_gpio_export_set_value(&x_tmp_gpio);
         x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_we;
         x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
-        ud_gpio_export_set_dir(&x_tmp_gpio);
-        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
-        x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
-        ud_gpio_export_set_dir(&x_tmp_gpio);
+        ud_gpio_export_set_value(&x_tmp_gpio);
+
         ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
 
-        for (i = UD_BUS_DATA_BIT - 1; i >= 0; i--)
+        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
+        x_tmp_gpio.x_value = UD_GPIO_VALUE_LOW;
+        ud_gpio_export_set_value(&x_tmp_gpio);
+
+        ud_bus_delay(x_p_bus->x_io.u32_bus_io_delay);
+
+        for (i = 0 ; i < UD_BUS_DATA_BIT; i++)
         {
-            x_tmp_gpio.x_pin = x_p_bus->x_io.x_p_bus_io_data[i];
+            x_tmp_gpio.x_pin = x_p_bus->x_io.x_p_bus_io_data[UD_BUS_DATA_BIT - i - 1];
             ud_gpio_export_get_value(&x_tmp_gpio);
             if (x_tmp_gpio.x_value == UD_GPIO_VALUE_HIGH)
             {
@@ -264,9 +286,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
             u32_temp <<= 1;
         }
 
-        x_tmp_gpio.x_pin = x_p_bus->x_io.x_bus_io_cs;
-        x_tmp_gpio.x_value = UD_GPIO_VALUE_HIGH;
-        ud_gpio_export_set_dir(&x_tmp_gpio);
+        ud_bus_init(x_p_bus);
 
         x_p_bus->u32_bus_data = u32_temp;
 
