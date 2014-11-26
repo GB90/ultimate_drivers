@@ -21,7 +21,7 @@ int main(void)
     int i32_fd, i, j;
     int i32_result = EXIT_SUCCESS;
     struct bus_struct x_bus = {
-        .x_io.u32_bus_io_delay = 100,
+        .x_io.u32_bus_io_delay = 1000,
         .x_io.x_bus_io_cs = UD_PIN_PA29,
         .x_io.x_bus_io_oe = UD_PIN_PA31,
         .x_io.x_bus_io_we = UD_PIN_PA25,
