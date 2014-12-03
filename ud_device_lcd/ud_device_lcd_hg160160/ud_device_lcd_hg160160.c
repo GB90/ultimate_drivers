@@ -66,7 +66,7 @@ void ud_lcd_reset_backlight(int i32_rst, int i32_blon)
 {
     unsigned char u8_tmp = 0;
     struct bus_struct x_bus;
-    int i = 1000;
+    int i = 10000;
 
 
     x_bus.u32_bus_addr = LCD_REG_OTH;
@@ -88,7 +88,7 @@ void ud_lcd_reset_backlight(int i32_rst, int i32_blon)
     x_bus.u32_bus_data = u8_tmp;
     ud_bus_export_set_data(&x_bus);
 
-    i = 1000;
+    i = 10000;
     while(i--);
 }
 
