@@ -164,9 +164,9 @@ void ud_lcd_fillrect(const struct fb_fillrect * ux_p_rect)
 {
     int i32_x, i32_y;
     ud_lcd_setcolor((ux_p_rect->color&0x00ff0000)>>16, (ux_p_rect->color&0x0000ff00)>>8, (ux_p_rect->color&0x000000ff));
-    for(i32_y = ux_p_rect->dy; i32_y < ux_p_rect->dy + ux_p_rect->height; i32_y ++)
+    for(i32_y = ux_p_rect->dy; i32_y < (ux_p_rect->dy + ux_p_rect->height); i32_y ++)
     {
-        for(i32_x = ux_p_rect->dx; i32_x < ux_p_rect->dx + ux_p_rect->width; i32_y ++)
+        for(i32_x = ux_p_rect->dx; i32_x < (ux_p_rect->dx + ux_p_rect->width); i32_x ++)
         {
             ud_lcd_rotate_check(&i32_x, &i32_y);
             if(i32_x >= 0 && i32_y >= 0 && i32_x < X_MAX && i32_y < Y_MAX)
@@ -311,7 +311,7 @@ static int __init ud_lcd160160_module_init (void)
 
     ud_lcd_init();
     ud_lcd_fillrect(&rect);
-    //ud_lcd_refresh();
+    ud_lcd_refresh();
 
     printd("insmod successfully\n");
     return (0);
