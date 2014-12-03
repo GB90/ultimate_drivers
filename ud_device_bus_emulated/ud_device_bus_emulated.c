@@ -79,14 +79,14 @@ static struct bus_io x_bus_io =
 };
 
 //主设备号
-int i32_bus_major = UD_BUS_MAJOR;
+int major = UD_BUS_MAJOR;
 //次设备号
-int i32_bus_minor = 0;
+int minor = 0;
 //设备数量
 int i32_bus_max_devs = UD_BUS_MAX_DEVS;
 
-module_param(i32_bus_major, int ,S_IRUGO);
-module_param(i32_bus_minor, int ,S_IRUGO);
+module_param(major, int ,S_IRUGO);
+module_param(minor, int ,S_IRUGO);
 //modify-2014.11.18 去掉了多设备的模块参数
 //module_param(i32_bus_max_devs, int ,S_IRUGO);
 
@@ -400,16 +400,16 @@ static int __init ud_bus_module_init (void)
     dev_t x_dev = 0;
     int i;
 
-    if (i32_bus_major)
+    if (major)
     {
-        x_dev = MKDEV(i32_bus_major, i32_bus_minor);
+        x_dev = MKDEV(major, minor);
         i32_result = register_chrdev_region(x_dev, i32_bus_max_devs, "ud_bus");
     }
     else
     {
-        i32_result = alloc_chrdev_region(&x_dev, i32_bus_minor, i32_bus_max_devs, "ud_bus");
-        i32_bus_major = MAJOR(x_dev);
-        printd("dev major is %d\n", i32_bus_major);
+        i32_result = alloc_chrdev_region(&x_dev, minor, i32_bus_max_devs, "ud_bus");
+        major = MAJOR(x_dev);
+        printd("dev major is %d\n", major);
     }
 
     if (i32_result < 0)
@@ -434,7 +434,7 @@ static int __init ud_bus_module_init (void)
     {
         spin_lock_init(&x_p_bus_devices[i].x_spinlock);
 
-        x_dev = MKDEV(i32_bus_major, i32_bus_minor + i);
+        x_dev = MKDEV(major, minor + i);
         cdev_init(&x_p_bus_devices[i].x_cdev, &bus_fops);
         x_p_bus_devices[i].x_cdev.owner = THIS_MODULE;
         x_p_bus_devices[i].x_cdev.ops = &bus_fops;
@@ -456,7 +456,7 @@ static int __init ud_bus_module_init (void)
 
 static void __exit ud_bus_module_exit (void)
 {
-    dev_t x_dev = MKDEV(i32_bus_major, i32_bus_minor);
+    dev_t x_dev = MKDEV(major, minor);
     int i;
 
     if (x_p_bus_devices)

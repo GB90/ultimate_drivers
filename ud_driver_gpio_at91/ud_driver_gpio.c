@@ -41,14 +41,14 @@ struct gpio_dev
 };
 
 //主设备号
-int i32_gpio_major = UD_GPIO_MAJOR;
+int major = UD_GPIO_MAJOR;
 //次设备号
-int i32_gpio_minor = 0;
+int minor = 0;
 //设备数量
 int i32_gpio_max_devs = UD_GPIO_MAX_DEVS;
 
-module_param(i32_gpio_major, int ,S_IRUGO);
-module_param(i32_gpio_minor, int ,S_IRUGO);
+module_param(major, int ,S_IRUGO);
+module_param(minor, int ,S_IRUGO);
 //modify-2014.11.18 去掉了多设备的模块参数
 //module_param(i32_gpio_max_devs, int ,S_IRUGO);
 
@@ -281,16 +281,16 @@ static int __init ud_gpio_module_init (void)
     dev_t x_dev = 0;
     int i;
 
-    if (i32_gpio_major)
+    if (major)
     {
-        x_dev = MKDEV(i32_gpio_major, i32_gpio_minor);
+        x_dev = MKDEV(major, minor);
         i32_result = register_chrdev_region(x_dev, i32_gpio_max_devs, "ud_gpio");
     }
     else
     {
-        i32_result = alloc_chrdev_region(&x_dev, i32_gpio_minor, i32_gpio_max_devs, "ud_gpio");
-        i32_gpio_major = MAJOR(x_dev);
-        printd("dev major is %d\n", i32_gpio_major);
+        i32_result = alloc_chrdev_region(&x_dev, minor, i32_gpio_max_devs, "ud_gpio");
+        major = MAJOR(x_dev);
+        printd("dev major is %d\n", major);
     }
 
     if (i32_result < 0)
@@ -313,7 +313,7 @@ static int __init ud_gpio_module_init (void)
     {
         spin_lock_init(&x_p_gpio_devices[i].x_spinlock);
 
-        x_dev = MKDEV(i32_gpio_major, i32_gpio_minor + i);
+        x_dev = MKDEV(major, minor + i);
         cdev_init(&x_p_gpio_devices[i].x_cdev, &gpio_fops);
         x_p_gpio_devices[i].x_cdev.owner = THIS_MODULE;
         x_p_gpio_devices[i].x_cdev.ops = &gpio_fops;
@@ -335,7 +335,7 @@ static int __init ud_gpio_module_init (void)
 
 static void __exit ud_gpio_module_exit (void)
 {
-    dev_t x_dev = MKDEV(i32_gpio_major, i32_gpio_minor);
+    dev_t x_dev = MKDEV(major, minor);
     int i;
 
     if (x_p_gpio_devices)
