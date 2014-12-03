@@ -73,9 +73,8 @@ void ud_lcd_reset_backlight(int i32_rst, int i32_blon)
 
     if(i32_rst)
     {
-        u8_tmp |= 1<<4;
+        u8_tmp |= 1<<3;
         x_bus.u32_bus_data = u8_tmp;
-        printd("1, data:0x%x\n" ,u8_tmp);
         ud_bus_export_set_data(&x_bus);
         u8_tmp = 0;
         x_bus.u32_bus_data = u8_tmp;
@@ -84,12 +83,10 @@ void ud_lcd_reset_backlight(int i32_rst, int i32_blon)
 
     if(i32_blon)
     {
-        u8_tmp |= 1<<3;
+        u8_tmp |= 1<<2;
         x_bus.u32_bus_data = u8_tmp;
     }
-    printd("2, data:0x%x\n" ,u8_tmp);
     ud_bus_export_set_data(&x_bus);
-    printd("3\n");
     i = 1000;
     while(i--);
 }
@@ -97,7 +94,6 @@ void ud_lcd_reset_backlight(int i32_rst, int i32_blon)
 int ud_lcd_init(void)
 {
     struct bus_struct x_bus;
-    printd("0\n");
 
     ud_lcd_reset_backlight(1,1);
 
@@ -175,6 +171,7 @@ void ud_lcd_fillrect(const struct fb_fillrect * ux_p_rect)
             ud_lcd_rotate_check(&i32_x, &i32_y);
             if(i32_x >= 0 && i32_y >= 0 && i32_x < X_MAX && i32_y < Y_MAX)
             {
+                printd("%d,%d:%d\n", i32_x, i32_y, ud_lcd.u8_color);
                 ud_lcd.u8_p_lcd_dram[i32_y][i32_x] = ud_lcd.u8_color;
             }
         }
@@ -313,7 +310,7 @@ static int __init ud_lcd160160_module_init (void)
     };
 
     ud_lcd_init();
-    //ud_lcd_fillrect(&rect);
+    ud_lcd_fillrect(&rect);
     //ud_lcd_refresh();
 
     printd("insmod successfully\n");
