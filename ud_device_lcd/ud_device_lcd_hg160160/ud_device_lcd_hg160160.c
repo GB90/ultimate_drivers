@@ -68,7 +68,6 @@ void ud_lcd_reset_backlight(int i32_rst, int i32_blon)
     struct bus_struct x_bus;
     int i = 1000;
 
-    printd("1\n");
 
     x_bus.u32_bus_addr = LCD_REG_OTH;
 
@@ -76,21 +75,23 @@ void ud_lcd_reset_backlight(int i32_rst, int i32_blon)
     {
         u8_tmp |= 1<<4;
         x_bus.u32_bus_data = u8_tmp;
+        printd("1, data:0x%x\n" ,u8_tmp);
         ud_bus_export_set_data(&x_bus);
         u8_tmp = 0;
         x_bus.u32_bus_data = u8_tmp;
-        printd("2\n");
         while(i--);
     }
-    printd("3\n");
 
     if(i32_blon)
     {
         u8_tmp |= 1<<3;
         x_bus.u32_bus_data = u8_tmp;
     }
+    printd("2, data:0x%x\n" ,u8_tmp);
     ud_bus_export_set_data(&x_bus);
-    printd("4\n");
+    printd("3\n");
+    i = 1000;
+    while(i--);
 }
 
 int ud_lcd_init(void)
@@ -312,8 +313,8 @@ static int __init ud_lcd160160_module_init (void)
     };
 
     ud_lcd_init();
-    ud_lcd_fillrect(&rect);
-    ud_lcd_refresh();
+    //ud_lcd_fillrect(&rect);
+    //ud_lcd_refresh();
 
     printd("insmod successfully\n");
     return (0);
