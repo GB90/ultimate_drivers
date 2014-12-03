@@ -135,14 +135,6 @@ static int __init ud_glcd_module_init (void)
     int i32_result, i32_err;
     dev_t x_dev = 0;
     int i;
-    struct fb_fillrect rect =
-    {
-        .dx = 50,
-        .dy = 50,
-        .width = 60,
-        .height = 60,
-        .color = 0,
-    };
 
     if (major)
     {
@@ -188,10 +180,6 @@ static int __init ud_glcd_module_init (void)
             goto fail;
         }
     }
-
-    ud_lcd_init();
-    ud_lcd_fillrect(&rect);
-    ud_lcd_refresh();
 
     printd("insmod successfully\n");
     return (0);

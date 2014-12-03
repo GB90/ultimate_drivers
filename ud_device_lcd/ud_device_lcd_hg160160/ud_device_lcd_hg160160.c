@@ -6,10 +6,15 @@
  * 适用范围：特殊(hg160160，ud_device_bus_emulated)
  */
 
+#include <linux/module.h>
+#include <linux/init.h>
+
 #include <linux/fb.h>
 #include "../../include/ud_device_lcd.h"
 #include "../../include/ud_device_bus_emulated.h"
 #include "../../include/common.h"
+
+MODULE_LICENSE("Dual BSD/GPL");
 
 extern int ud_bus_export_set_data (struct bus_struct *);
 extern int ud_bus_export_get_data (struct bus_struct *);
@@ -288,23 +293,29 @@ void ud_lcd_refresh(void)
     }
 }
 
-//初始化液晶
-int ud_lcd_init(void);
-//设置色彩寄存器
-int ud_lcd_setcolor(unsigned char u8_red, unsigned char u8_green, unsigned char u8_blue);
-//显示空白
-int ud_lcd_blank(int blank);
-//显示一个实心矩形
-void ud_lcd_fillrect(const struct fb_fillrect * ux_p_rect);
-//区域拷贝
-void ud_lcd_copyarea(const struct fb_copyarea * ux_p_region);
-//显示图像
-void ud_lcd_imageblit(const struct fb_image * ux_p_image);
-//旋转坐标系
-void ud_lcd_rotate(int angle);
-void ud_lcd_rotate_check(int * i32_p_x, int * i32_p_y);
-//刷新
-void ud_lcd_refresh(void);
+static int __init ud_lcd160160_module_init (void)
+{
+    struct fb_fillrect rect =
+    {
+        .dx = 50,
+        .dy = 50,
+        .width = 60,
+        .height = 60,
+        .color = 0,
+    };
+
+    ud_lcd_init();
+    ud_lcd_fillrect(&rect);
+    ud_lcd_refresh();
+
+    printd("insmod successfully\n");
+    return (0);
+}
+
+static void __exit ud_lcd160160_module_exit (void)
+{
+    printd("rmmod successfully\n");
+}
 
 EXPORT_SYMBOL(ud_lcd_init);
 EXPORT_SYMBOL(ud_lcd_setcolor);
@@ -314,3 +325,6 @@ EXPORT_SYMBOL(ud_lcd_copyarea);
 EXPORT_SYMBOL(ud_lcd_imageblit);
 EXPORT_SYMBOL(ud_lcd_rotate);
 EXPORT_SYMBOL(ud_lcd_refresh);
+
+module_init(ud_lcd160160_module_init);
+module_exit(ud_lcd160160_module_exit);
