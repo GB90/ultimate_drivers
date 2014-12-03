@@ -59,7 +59,7 @@ struct bus_dev
 
 static struct bus_io x_bus_io =
 {
-    .u32_bus_io_delay = 10,
+    .u32_bus_io_delay = 2,
     .u32_bus_io_addr_bit = 3,
     .u32_bus_io_data_bit = 8,
     .x_bus_io_cs = UD_PIN_PA29,
