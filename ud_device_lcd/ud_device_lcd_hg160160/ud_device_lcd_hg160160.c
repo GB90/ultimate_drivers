@@ -3274,12 +3274,9 @@ void ud_lcd_reset_backlight(int i32_rst, int i32_blon)
 
     if(i32_rst)
     {
-        x_bus.u32_bus_data = 1<<3;
-        ud_bus_export_set_data(&x_bus);
-        for(i=0;i<100000;i++);
         x_bus.u32_bus_data = 0;
         ud_bus_export_set_data(&x_bus);
-        for(i=0;i<100000;i++);
+        for(i=0;i<10000;i++);
     }
 
     if(i32_blon)
@@ -3501,6 +3498,7 @@ void ud_lcd_refresh(void)
 
 static int __init ud_lcd160160_module_init (void)
 {
+    ud_lcd_init();
     ud_lcd_init();
     ud_lcd_refresh();
 
