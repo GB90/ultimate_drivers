@@ -3502,7 +3502,6 @@ void ud_lcd_refresh(void)
 static int __init ud_lcd160160_module_init (void)
 {
     ud_lcd_init();
-    ud_lcd_init();
     ud_lcd_refresh();
 
     printd("insmod successfully\n");
