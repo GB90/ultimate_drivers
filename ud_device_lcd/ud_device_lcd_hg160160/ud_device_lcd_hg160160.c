@@ -3274,10 +3274,12 @@ void ud_lcd_reset_backlight(int i32_rst, int i32_blon)
 
     if(i32_rst)
     {
-        u8_tmp = 0;
-        x_bus.u32_bus_data = u8_tmp;
+        x_bus.u32_bus_data = 1<<3;
         ud_bus_export_set_data(&x_bus);
-        for(i=0;i<10000;i++);
+        for(i=0;i<100000;i++);
+        x_bus.u32_bus_data = 0;
+        ud_bus_export_set_data(&x_bus);
+        for(i=0;i<100000;i++);
     }
 
     if(i32_blon)
