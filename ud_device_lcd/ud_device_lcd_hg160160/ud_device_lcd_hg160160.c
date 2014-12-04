@@ -3274,16 +3274,8 @@ void ud_lcd_reset_backlight(int i32_rst, int i32_blon)
 
     if(i32_rst)
     {
-        x_bus.u32_bus_data = 1<<3;
-        ud_bus_export_set_data(&x_bus);
-        for(i=0;i<10000;i++);
-        x_bus.u32_bus_data = 0;
-        ud_bus_export_set_data(&x_bus);
-        for(i=0;i<10000;i++);
-        x_bus.u32_bus_data = 1<<3;
-        ud_bus_export_set_data(&x_bus);
-        for(i=0;i<10000;i++);
-        x_bus.u32_bus_data = 0;
+        u8_tmp = 0;
+        x_bus.u32_bus_data = u8_tmp;
         ud_bus_export_set_data(&x_bus);
         for(i=0;i<10000;i++);
     }
@@ -3302,7 +3294,6 @@ void ud_lcd_reset_backlight(int i32_rst, int i32_blon)
 int ud_lcd_init(void)
 {
     struct bus_struct x_bus;
-    int i;
 
     ud_lcd_reset_backlight(1,1);
 
@@ -3310,58 +3301,40 @@ int ud_lcd_init(void)
 
     x_bus.u32_bus_data = 0xe2;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0xae;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0x26;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0x2b;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0xeb;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0x81;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0x73;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0x89;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0xc4;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0x84;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0xde;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0xc8;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0x18;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0xa3;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0xd6;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0xd1;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0x84;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
     x_bus.u32_bus_data = 0xad;
     ud_bus_export_set_data(&x_bus);
-    for(i=0;i<1000;i++);
 
     return (0);
 }
@@ -3526,6 +3499,7 @@ void ud_lcd_refresh(void)
 
 static int __init ud_lcd160160_module_init (void)
 {
+    ud_lcd_init();
     ud_lcd_init();
     ud_lcd_refresh();
 
