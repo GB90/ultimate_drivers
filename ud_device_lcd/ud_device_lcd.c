@@ -4,19 +4,27 @@
 
 #include <linux/kernel.h>
 #include <linux/slab.h>
-#include <linux/errno.h>
-#include <linux/cdev.h>
-#include <linux/types.h>
-#include <linux/device.h>
 #include <linux/err.h>
+#include <linux/errno.h>
 #include <linux/fs.h>
 #include <linux/proc_fs.h>
 #include <linux/fcntl.h>
 #include <linux/seq_file.h>
 #include <linux/spinlock.h>
+#include <linux/compat.h>
+#include <linux/types.h>
+#include <linux/major.h>
+#include <linux/slab.h>
+#include <linux/mm.h>
+#include <linux/mman.h>
+#include <linux/vt.h>
+#include <linux/console.h>
+#include <linux/kmod.h>
+#include <linux/device.h>
+#include <linux/efi.h>
 #include <linux/fb.h>
 
-#include <asm/uaccess.h>
+#include <asm/fb.h>
 
 #include "../include/ud_device_lcd.h"
 #include "../include/common.h"
@@ -42,15 +50,15 @@ module_param(max_devs, int ,S_IRUGO);
 
 MODULE_LICENSE("Dual BSD/GPL");
 
-extern int ud_lcd_init(void);
-extern int ud_lcd_setcolor(unsigned char , unsigned char, unsigned char);
-extern int ud_lcd_blank(int);
-extern void ud_lcd_fillrect(const struct fb_fillrect *);
-extern void ud_lcd_copyarea(const struct fb_copyarea *);
-extern void ud_lcd_imageblit(const struct fb_image *);
-extern void ud_lcd_rotate(int);
-extern void ud_lcd_rotate_check(int *, int *);
-extern void ud_lcd_refresh(void);
+extern int ud_lcd_export_init(void);
+extern int ud_lcd_export_setcolor(unsigned char , unsigned char, unsigned char);
+extern int ud_lcd_export_blank(int);
+extern void ud_lcd_export_fillrect(const struct fb_fillrect *);
+extern void ud_lcd_export_copyarea(const struct fb_copyarea *);
+extern void ud_lcd_export_imageblit(const struct fb_image *);
+extern void ud_lcd_export_rotate(int);
+extern void ud_lcd_export_rotate_check(int *, int *);
+extern void ud_lcd_export_refresh(void);
 
 struct glcd_dev * x_p_glcd_devices;
 
@@ -85,38 +93,38 @@ ssize_t ud_glcd_write (struct file * x_p_file, const char __user * i8_p_buf, siz
 long ud_glcd_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u32_arg)
 {
     long i32_result = 0;
-//    unsigned long u32_flags;
-//    struct glcd_dev * x_p_devices;
-//    struct glcd_struct * x_p_glcd;
-//
-//    x_p_devices = (struct glcd_dev *) x_p_file->private_data;
-//    spin_lock_irqsave(&x_p_devices->x_spinlock, u32_flags);
-//
-//    x_p_glcd = (struct glcd_struct *) kmalloc(sizeof(struct glcd_struct), GFP_KERNEL);
-//    if (!x_p_glcd)
-//    {
-//        printd("out of memory \n");
-//        i32_result = -ENOMEM;
-//        goto fail1;
-//    }
-//
-//    if (0 != copy_from_user(x_p_glcd, (struct glcd_struct*) u32_arg, sizeof(struct glcd_struct)))
-//    {
-//        printd("copy error \n");
-//        i32_result = -EPERM;
-//        goto fail0;
-//    }
-//
-//    switch (u32_cmd)
-//    {
-//    default :
-//        printd("cmd error \n");
-//        i32_result = -EINVAL;
-//        goto fail0;
-//    }
-//
-//    fail0 : kfree(x_p_glcd);
-//    fail1 : spin_unlock_irqrestore(&x_p_devices->x_spinlock, u32_flags);
+    unsigned long u32_flags;
+    struct glcd_dev * x_p_devices;
+    struct glcd_struct * x_p_glcd;
+
+    x_p_devices = (struct glcd_dev *) x_p_file->private_data;
+    spin_lock_irqsave(&x_p_devices->x_spinlock, u32_flags);
+
+    x_p_glcd = (struct glcd_struct *) kmalloc(sizeof(struct glcd_struct), GFP_KERNEL);
+    if (!x_p_glcd)
+    {
+        printd("out of memory \n");
+        i32_result = -ENOMEM;
+        goto fail1;
+    }
+
+    if (0 != copy_from_user(x_p_glcd, (struct glcd_struct*) u32_arg, sizeof(struct glcd_struct)))
+    {
+        printd("copy error \n");
+        i32_result = -EPERM;
+        goto fail0;
+    }
+
+    switch (u32_cmd)
+    {
+    default :
+        printd("cmd error \n");
+        i32_result = -EINVAL;
+        goto fail0;
+    }
+
+    fail0 : kfree(x_p_glcd);
+    fail1 : spin_unlock_irqrestore(&x_p_devices->x_spinlock, u32_flags);
     return (i32_result);
 }
 
