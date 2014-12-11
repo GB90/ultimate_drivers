@@ -31,8 +31,8 @@
 
 struct glcd_dev
 {
-    //自旋锁
-    spinlock_t x_spinlock;
+    //fb_info已包含多重锁结构
+    struct fb_info  x_info;
     //cdev
     struct cdev x_cdev;
 };
@@ -45,20 +45,13 @@ int minor = 0;
 int max_devs = UD_GLCD_MAX_DEVS;
 
 module_param(major, int ,S_IRUGO);
-module_param(minor, int ,S_IRUGO);
-module_param(max_devs, int ,S_IRUGO);
 
 MODULE_LICENSE("Dual BSD/GPL");
 
 extern int ud_lcd_export_init(void);
-extern int ud_lcd_export_setcolor(unsigned char , unsigned char, unsigned char);
-extern int ud_lcd_export_blank(int);
-extern void ud_lcd_export_fillrect(const struct fb_fillrect *);
-extern void ud_lcd_export_copyarea(const struct fb_copyarea *);
-extern void ud_lcd_export_imageblit(const struct fb_image *);
-extern void ud_lcd_export_rotate(int);
-extern void ud_lcd_export_rotate_check(int *, int *);
+extern int ud_lcd_export_blank(void);
 extern void ud_lcd_export_refresh(void);
+extern int ud_lcd_export_set_info(struct fb_info *);
 
 struct glcd_dev * x_p_glcd_devices;
 
@@ -81,50 +74,156 @@ int ud_glcd_release (struct inode * x_p_inode, struct file * x_p_file)
 
 ssize_t ud_glcd_read (struct file * x_p_file, char __user * i8_p_buf, size_t x_count, loff_t * x_p_pos)
 {
-    return (0);
+    struct glcd_dev * x_p_devices = (struct glcd_dev *)x_p_file->private_data;
+    unsigned long u32_total_size = 0;
+    unsigned long u32_pos = *x_p_pos;
+    char __iomem * i8_p_src;
+    char * i8_p_dest, * i8_p_buffer;
+    int i32_err = 0, i32_now_count = 0, i32_total_cnt = 0;
+
+    u32_total_size = x_p_devices->x_info.screen_size;
+
+    if(u32_pos > u32_total_size)
+    {
+        return (0);
+    }
+    if(x_count > u32_total_size)
+    {
+        x_count = u32_total_size;
+    }
+    if(x_count + u32_pos > u32_total_size)
+    {
+        x_count = u32_total_size - u32_pos;
+    }
+
+    i8_p_buffer = kmalloc((x_count > UD_GLCD_PAGE_SIZE) ? UD_GLCD_PAGE_SIZE : x_count, GFP_KERNEL);
+    if(!i8_p_buffer)
+    {
+        return (-ENOMEM);
+    }
+
+    i8_p_src = (char __iomem * )(x_p_devices->x_info.screen_base + u32_pos);
+
+    while(x_count)
+    {
+        i32_now_count = (x_count > UD_GLCD_PAGE_SIZE) ? UD_GLCD_PAGE_SIZE : x_count;
+        i8_p_dest = i8_p_buffer;
+
+        memcpy(i8_p_dest, i8_p_src, i32_now_count);
+
+        i8_p_dest += i32_now_count;
+        i8_p_src += i32_now_count;
+
+        if(copy_to_user(i8_p_buf, i8_p_buffer, i32_now_count))
+        {
+            i32_err = -EFAULT;
+            break;
+        }
+
+        *x_p_pos += i32_now_count;
+        i8_p_buf += i32_now_count;
+        i32_total_cnt += i32_now_count;
+        x_count -= i32_now_count;
+    }
+    kfree(i8_p_buffer);
+
+    return ((i32_err) ?  i32_err : i32_total_cnt);
 }
 
 ssize_t ud_glcd_write (struct file * x_p_file, const char __user * i8_p_buf, size_t x_count, loff_t * x_p_pos)
 {
-    return (0);
+    struct glcd_dev * x_p_devices = (struct glcd_dev *)x_p_file->private_data;
+    unsigned long u32_total_size = 0;
+    unsigned long u32_pos = *x_p_pos;
+    char __iomem * i8_p_dest;
+    char * i8_p_src, * i8_p_buffer;
+    int i32_err = 0, i32_now_count = 0, i32_total_cnt = 0;
+
+    u32_total_size = x_p_devices->x_info.screen_size;
+
+    if(u32_pos > u32_total_size)
+    {
+        return (-EFBIG);
+    }
+    if(x_count > u32_total_size)
+    {
+        i32_err = -EFBIG;
+        x_count = u32_total_size;
+    }
+    if(x_count + u32_pos > u32_total_size)
+    {
+        if(!i32_err)
+        {
+            i32_err = -ENOSPC;
+        }
+        x_count = u32_total_size - u32_pos;
+    }
+
+    i8_p_buffer = kmalloc((x_count > UD_GLCD_PAGE_SIZE) ? UD_GLCD_PAGE_SIZE : x_count, GFP_KERNEL);
+    if(!i8_p_buffer)
+    {
+        return (-ENOMEM);
+    }
+
+    i8_p_dest = (char __iomem * )(x_p_devices->x_info.screen_base + u32_pos);
+
+    while(x_count)
+    {
+        i32_now_count = (x_count > UD_GLCD_PAGE_SIZE) ? UD_GLCD_PAGE_SIZE : x_count;
+        i8_p_src = i8_p_buffer;
+
+        if(copy_from_user(i8_p_src, i8_p_buf, i32_now_count))
+        {
+            i32_err = -EFAULT;
+            break;
+        }
+
+        memcpy(i8_p_dest, i8_p_src, i32_now_count);
+
+        i8_p_dest += i32_now_count;
+        i8_p_src += i32_now_count;
+        *x_p_pos += i32_now_count;
+        i8_p_buf += i32_now_count;
+        i32_total_cnt += i32_now_count;
+        x_count -= i32_now_count;
+    }
+    kfree(i8_p_buffer);
+
+    return ((i32_total_cnt) ? i32_total_cnt : i32_err);
 }
 
 
 long ud_glcd_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u32_arg)
 {
+    struct glcd_dev * x_p_devices = (struct glcd_dev *)x_p_file->private_data;
     long i32_result = 0;
-    unsigned long u32_flags;
-    struct glcd_dev * x_p_devices;
-    struct glcd_struct * x_p_glcd;
-
-    x_p_devices = (struct glcd_dev *) x_p_file->private_data;
-    spin_lock_irqsave(&x_p_devices->x_spinlock, u32_flags);
-
-    x_p_glcd = (struct glcd_struct *) kmalloc(sizeof(struct glcd_struct), GFP_KERNEL);
-    if (!x_p_glcd)
-    {
-        printd("out of memory \n");
-        i32_result = -ENOMEM;
-        goto fail1;
-    }
-
-    if (0 != copy_from_user(x_p_glcd, (struct glcd_struct*) u32_arg, sizeof(struct glcd_struct)))
-    {
-        printd("copy error \n");
-        i32_result = -EPERM;
-        goto fail0;
-    }
+    struct fb_var_screeninfo x_var;
+    struct fb_fix_screeninfo x_fix;
+    void __user * v_p_arg = (void __user *)u32_arg;
 
     switch (u32_cmd)
     {
+    case FBIOGET_VSCREENINFO:
+    case FBIOPUT_VSCREENINFO:
+        mutex_lock(&x_p_devices->x_info.lock);
+        x_var = x_p_devices->x_info.var;
+        mutex_unlock(&x_p_devices->x_info.lock);
+        i32_result = copy_to_user(v_p_arg, &x_var, sizeof(x_var)) ? -EFAULT : 0;
+        break;
+    case FBIOGET_FSCREENINFO:
+        mutex_lock(&x_p_devices->x_info.lock);
+        x_fix = x_p_devices->x_info.fix;
+        mutex_unlock(&x_p_devices->x_info.lock);
+        i32_result = copy_to_user(v_p_arg, &x_fix, sizeof(x_fix)) ? -EFAULT : 0;
+        break;
+    case FBIOBLANK:
+        ud_lcd_export_blank();
+        break;
     default :
-        printd("cmd error \n");
-        i32_result = -EINVAL;
-        goto fail0;
+        printd("cmd : 0x%x", u32_cmd);
+        i32_result = -ENODEV;
     }
 
-    fail0 : kfree(x_p_glcd);
-    fail1 : spin_unlock_irqrestore(&x_p_devices->x_spinlock, u32_flags);
     return (i32_result);
 }
 
@@ -136,6 +235,7 @@ struct file_operations glcd_fops =
     .unlocked_ioctl = ud_glcd_ioctl,
     .open = ud_glcd_open,
     .release = ud_glcd_release,
+    .llseek = default_llseek,
 };
 
 static int __init ud_glcd_module_init (void)
@@ -174,7 +274,7 @@ static int __init ud_glcd_module_init (void)
 
     for (i = 0; i < max_devs; i++)
     {
-        spin_lock_init(&x_p_glcd_devices[i].x_spinlock);
+        ud_lcd_export_set_info(&x_p_glcd_devices[i].x_info);
 
         x_dev = MKDEV(major, minor + i);
         cdev_init(&x_p_glcd_devices[i].x_cdev, &glcd_fops);

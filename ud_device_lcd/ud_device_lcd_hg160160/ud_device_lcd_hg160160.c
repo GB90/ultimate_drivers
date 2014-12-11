@@ -3255,7 +3255,7 @@ int ud_lcd_export_blank(void);
 //刷新
 void ud_lcd_export_refresh(void);
 
-int ud_lcd_export_get_info(struct fb_info * ux_info);
+int ud_lcd_export_set_info(struct fb_info * x_info);
 
 
 #define X_MAX       (160)
@@ -3361,17 +3361,17 @@ int ud_lcd_export_blank(void)
     return (0);
 }
 
-void ud_lcd_export_fillrect(const struct fb_fillrect * ux_p_rect)
+void ud_lcd_export_fillrect(const struct fb_fillrect * x_p_rect)
 {
 
 }
 
-void ud_lcd_export_copyarea(const struct fb_copyarea * ux_p_region)
+void ud_lcd_export_copyarea(const struct fb_copyarea * x_p_region)
 {
 
 }
 
-void ud_lcd_export_imageblit(const struct fb_image * ux_p_image)
+void ud_lcd_export_imageblit(const struct fb_image * x_p_image)
 {
 
 }
@@ -3439,30 +3439,32 @@ void ud_lcd_export_refresh(void)
     }
 }
 
-int ud_lcd_export_set_info(struct fb_info * ux_info)
+int ud_lcd_export_set_info(struct fb_info * x_info)
 {
-    memset(ux_info, 0 , sizeof(struct fb_info));
+    memcpy(x_info->fix.id, "hg160160", 8);
+    x_info->fix.smem_start = (unsigned long)(&(ud_lcd.u8_p_lcd_dram));
+    x_info->fix.smem_len = Y_MAX*X_MAX*4;
+    x_info->fix.type = FB_TYPE_PACKED_PIXELS;
+    x_info->fix.visual = FB_VISUAL_TRUECOLOR;
+    x_info->fix.accel = FB_ACCEL_NONE;
+    x_info->fix.line_length = X_MAX*4;
 
-    memcpy(ux_info->fix.id, "hg160160", 8);
-    ux_info->fix.smem_start = (unsigned long)(&(ud_lcd.u8_p_lcd_dram));
-    ux_info->fix.smem_len = Y_MAX*X_MAX*4;
-    ux_info->fix.type = FB_TYPE_PACKED_PIXELS;
-    ux_info->fix.visual = FB_VISUAL_TRUECOLOR;
-    ux_info->fix.accel = FB_ACCEL_NONE;
+    x_info->var.xres = X_MAX;
+    x_info->var.yres = Y_MAX;
+    x_info->var.xres_virtual = x_info->var.xres;
+    x_info->var.yres_virtual = x_info->var.yres;
+    x_info->var.bits_per_pixel = 32;
+    x_info->var.transp.offset = 24;
+    x_info->var.transp.length = 8;
+    x_info->var.red.offset = 16;
+    x_info->var.red.length = 8;
+    x_info->var.green.offset = 8;
+    x_info->var.green.length = 8;
+    x_info->var.blue.offset = 0;
+    x_info->var.blue.length = 8;
 
-    ux_info->var.xres = 160;
-    ux_info->var.yres = 160;
-    ux_info->var.xres_virtual = 160;
-    ux_info->var.yres_virtual = 160;
-    ux_info->var.bits_per_pixel = 32;
-    ux_info->var.transp.offset = 24;
-    ux_info->var.transp.length = 8;
-    ux_info->var.red.offset = 16;
-    ux_info->var.red.length = 8;
-    ux_info->var.green.offset = 8;
-    ux_info->var.green.length = 8;
-    ux_info->var.blue.offset = 0;
-    ux_info->var.blue.length = 8;
+    x_info->screen_size = x_info->fix.smem_len;
+    x_info->screen_base = (char __iomem *)(x_info->fix.smem_start);
 
     return (0);
 }

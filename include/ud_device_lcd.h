@@ -11,6 +11,10 @@
 #define UD_GLCD_MAX_DEVS    (1)
 #endif
 
+#ifndef UD_GLCD_PAGE_SIZE
+#define UD_GLCD_PAGE_SIZE   (8*1024)
+#endif
+
 #define UD_GLCD_IOC_MAGIC  'l'
 
 
