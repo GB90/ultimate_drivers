@@ -23,7 +23,7 @@
 #include <linux/proc_fs.h>
 #include <linux/fcntl.h>
 #include <linux/seq_file.h>
-#include <linux/spinlock.h>
+#include <linux/mutex.h>
 
 #include <asm/uaccess.h>
 
@@ -164,7 +164,7 @@ int ud_bus_export_set_data (struct bus_struct * x_p_bus)
     unsigned long u32_temp;
     struct gpio_struct x_tmp_gpio;
 
-    mutex_lock(x_p_bus_devices->x_lock);
+    mutex_lock(&x_p_bus_devices->x_lock);
 
     u32_temp = x_p_bus->u32_bus_addr;
 
@@ -222,7 +222,7 @@ int ud_bus_export_set_data (struct bus_struct * x_p_bus)
     ud_bus_reset();
     ud_bus_delay(x_bus_io.u32_bus_io_delay);
 
-    mutex_unlock(x_p_bus_devices->x_lock);
+    mutex_unlock(&x_p_bus_devices->x_lock);
 
     return (0);
 }
@@ -233,7 +233,7 @@ int ud_bus_export_get_data (struct bus_struct * x_p_bus)
     unsigned long u32_temp;
     struct gpio_struct x_tmp_gpio;
 
-    mutex_lock(x_p_bus_devices->x_lock);
+    mutex_lock(&x_p_bus_devices->x_lock);
 
     u32_temp = x_p_bus->u32_bus_addr;
 
@@ -300,7 +300,7 @@ int ud_bus_export_get_data (struct bus_struct * x_p_bus)
 
     x_p_bus->u32_bus_data = u32_temp;
 
-    mutex_unlock(x_p_bus_devices->x_lock);
+    mutex_unlock(&x_p_bus_devices->x_lock);
 
     return (0);
 }
@@ -339,12 +339,7 @@ ssize_t ud_bus_write (struct file * x_p_file, const char __user * i8_p_buf, size
 long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u32_arg)
 {
     long i32_result = 0;
-    unsigned long u32_flags;
-
-    struct bus_dev * x_p_devices;
     struct bus_struct * x_p_bus;
-
-    x_p_devices = (struct bus_dev *) x_p_file->private_data;
 
     //创建struct bus_struct用以接受外部参数
     x_p_bus = (struct bus_struct *) kmalloc(sizeof(struct bus_struct), GFP_KERNEL);
