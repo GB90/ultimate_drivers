@@ -235,6 +235,7 @@ struct file_operations glcd_fops =
     .unlocked_ioctl = ud_glcd_ioctl,
     .open = ud_glcd_open,
     .release = ud_glcd_release,
+    .mmap = ud_glcd_mmap,
     .llseek = default_llseek,
 };
 

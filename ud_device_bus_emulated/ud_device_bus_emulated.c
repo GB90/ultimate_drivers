@@ -1,4 +1,5 @@
 /*
+ * modify-2014.12.11 安全机制重做，确保应用/驱动不会产生冲突
  * modify-2014.11.27 再次优化了总线接口，去掉了初始化总线引脚的功能，因为会被其他多个驱动调用，总线只需要地址和值这两个参数即可
  * modify-2014.11.25 优化了总线接口，仔细想了一下，其实总线没有必要支持多设备，因为一条总线理论上可以挂无限多的设备
  * modify-2014.11.18 ultimate_drivers/ud_device_bus_emulated/ud_device_bus_emulated.c
@@ -51,8 +52,8 @@ struct bus_io
 
 struct bus_dev
 {
-    //自旋锁
-    spinlock_t          x_spinlock;
+    //互斥锁
+    struct mutex        x_lock;
     //cdev
     struct cdev         x_cdev;
 };
@@ -163,6 +164,8 @@ int ud_bus_export_set_data (struct bus_struct * x_p_bus)
     unsigned long u32_temp;
     struct gpio_struct x_tmp_gpio;
 
+    mutex_lock(x_p_bus_devices->x_lock);
+
     u32_temp = x_p_bus->u32_bus_addr;
 
     //逐位设置每个对应地址参数IO脚的电平
@@ -219,6 +222,8 @@ int ud_bus_export_set_data (struct bus_struct * x_p_bus)
     ud_bus_reset();
     ud_bus_delay(x_bus_io.u32_bus_io_delay);
 
+    mutex_unlock(x_p_bus_devices->x_lock);
+
     return (0);
 }
 
@@ -227,6 +232,8 @@ int ud_bus_export_get_data (struct bus_struct * x_p_bus)
     int i;
     unsigned long u32_temp;
     struct gpio_struct x_tmp_gpio;
+
+    mutex_lock(x_p_bus_devices->x_lock);
 
     u32_temp = x_p_bus->u32_bus_addr;
 
@@ -293,6 +300,8 @@ int ud_bus_export_get_data (struct bus_struct * x_p_bus)
 
     x_p_bus->u32_bus_data = u32_temp;
 
+    mutex_unlock(x_p_bus_devices->x_lock);
+
     return (0);
 }
 
@@ -336,8 +345,6 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
     struct bus_struct * x_p_bus;
 
     x_p_devices = (struct bus_dev *) x_p_file->private_data;
-    //锁定
-    spin_lock_irqsave(&x_p_devices->x_spinlock, u32_flags);
 
     //创建struct bus_struct用以接受外部参数
     x_p_bus = (struct bus_struct *) kmalloc(sizeof(struct bus_struct), GFP_KERNEL);
@@ -345,7 +352,7 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
     {
         printd("out of memory \n");
         i32_result = -ENOMEM;
-        goto fail1;
+        goto fail0;
     }
 
     //拷贝到内部空间
@@ -380,8 +387,6 @@ long ud_bus_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long u
     }
 
     fail0 : kfree(x_p_bus);
-    //释放锁
-    fail1 : spin_unlock_irqrestore(&x_p_devices->x_spinlock, u32_flags);
     return (i32_result);
 }
 
@@ -432,8 +437,6 @@ static int __init ud_bus_module_init (void)
 
     for (i = 0; i < i32_bus_max_devs; i++)
     {
-        spin_lock_init(&x_p_bus_devices[i].x_spinlock);
-
         x_dev = MKDEV(major, minor + i);
         cdev_init(&x_p_bus_devices[i].x_cdev, &bus_fops);
         x_p_bus_devices[i].x_cdev.owner = THIS_MODULE;
