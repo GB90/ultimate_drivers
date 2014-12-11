@@ -217,7 +217,9 @@ long ud_glcd_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long 
         i32_result = copy_to_user(v_p_arg, &x_fix, sizeof(x_fix)) ? -EFAULT : 0;
         break;
     case FBIOBLANK:
+        mutex_lock(&x_p_devices->x_info.lock);
         ud_lcd_export_blank();
+        mutex_unlock(&x_p_devices->x_info.lock);
         break;
     default :
         printd("cmd : 0x%x", u32_cmd);
@@ -225,6 +227,15 @@ long ud_glcd_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long 
     }
 
     return (i32_result);
+}
+
+static int ud_glcd_mmap(struct file * x_p_file, struct vm_area_struct * x_p_vma)
+{
+    struct glcd_dev * x_p_devices = (struct glcd_dev *)x_p_file->private_data;
+    mutex_lock(&x_p_devices->x_info.lock);
+    ud_lcd_export_refresh();
+    mutex_unlock(&x_p_devices->x_info.lock);
+    return 0;
 }
 
 struct file_operations glcd_fops =
