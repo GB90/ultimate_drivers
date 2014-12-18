@@ -432,6 +432,8 @@ static int __init ud_bus_module_init (void)
 
     for (i = 0; i < i32_bus_max_devs; i++)
     {
+        mutex_init(&x_p_bus_devices[i].x_lock);
+
         x_dev = MKDEV(major, minor + i);
         cdev_init(&x_p_bus_devices[i].x_cdev, &bus_fops);
         x_p_bus_devices[i].x_cdev.owner = THIS_MODULE;

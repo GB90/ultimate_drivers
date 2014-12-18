@@ -38,11 +38,11 @@ struct glcd_dev
 };
 
 //主设备号
-int major = UD_GLCD_MAJOR;
+int major = UD_LCD_MAJOR;
 //次设备号
 int minor = 0;
 //设备数量
-int max_devs = UD_GLCD_MAX_DEVS;
+int max_devs = UD_LCD_MAX_DEVS;
 
 module_param(major, int ,S_IRUGO);
 
@@ -64,6 +64,8 @@ int ud_glcd_open (struct inode * x_p_inode, struct file * x_p_file)
     struct glcd_dev * x_p_devices;
     x_p_devices = container_of(x_p_inode->i_cdev, struct glcd_dev, x_cdev);
     x_p_file->private_data = x_p_devices;
+
+    printd("open glcd\n");
     return (0);
 }
 
@@ -80,6 +82,8 @@ ssize_t ud_glcd_read (struct file * x_p_file, char __user * i8_p_buf, size_t x_c
     char __iomem * i8_p_src;
     char * i8_p_dest, * i8_p_buffer;
     int i32_err = 0, i32_now_count = 0, i32_total_cnt = 0;
+
+    printd("read glcd\n");
 
     u32_total_size = x_p_devices->x_info.screen_size;
 
@@ -138,6 +142,8 @@ ssize_t ud_glcd_write (struct file * x_p_file, const char __user * i8_p_buf, siz
     char __iomem * i8_p_dest;
     char * i8_p_src, * i8_p_buffer;
     int i32_err = 0, i32_now_count = 0, i32_total_cnt = 0;
+
+    printd("write glcd\n");
 
     u32_total_size = x_p_devices->x_info.screen_size;
 
@@ -201,6 +207,8 @@ long ud_glcd_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long 
     struct fb_fix_screeninfo x_fix;
     void __user * v_p_arg = (void __user *)u32_arg;
 
+    printd("ok cmd : 0x%x\n", u32_cmd);
+
     switch (u32_cmd)
     {
     case FBIOGET_VSCREENINFO:
@@ -222,7 +230,7 @@ long ud_glcd_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long 
         mutex_unlock(&x_p_devices->x_info.lock);
         break;
     default :
-        printd("cmd : 0x%x", u32_cmd);
+        printd("cmd : 0x%x\n", u32_cmd);
         i32_result = -ENODEV;
     }
 
@@ -231,10 +239,9 @@ long ud_glcd_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long 
 
 static int ud_glcd_mmap(struct file * x_p_file, struct vm_area_struct * x_p_vma)
 {
-    struct glcd_dev * x_p_devices = (struct glcd_dev *)x_p_file->private_data;
-    mutex_lock(&x_p_devices->x_info.lock);
-    ud_lcd_export_refresh();
-    mutex_unlock(&x_p_devices->x_info.lock);
+    /* This is an IO map - tell maydump to skip this VMA */
+    x_p_vma->vm_flags |= VM_IO | VM_RESERVED;
+    x_p_vma->vm_page_prot = vm_get_page_prot(x_p_vma->vm_flags);
     return 0;
 }
 
@@ -286,6 +293,9 @@ static int __init ud_glcd_module_init (void)
 
     for (i = 0; i < max_devs; i++)
     {
+        mutex_init(&x_p_glcd_devices[i].x_info.lock);
+        mutex_init(&x_p_glcd_devices[i].x_info.mm_lock);
+
         ud_lcd_export_set_info(&x_p_glcd_devices[i].x_info);
 
         x_dev = MKDEV(major, minor + i);

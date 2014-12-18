@@ -1,5 +1,4 @@
 obj-m += ud_device_lcd.o
-obj-m += ud_device_lcd_hg160160/ud_device_lcd_hg160160.o
 
 KDIR :=/home/work/linux-at91-linux-2.6.39-at91
 PWD :=$(shell pwd)
