@@ -253,6 +253,8 @@ int ud_lcd_export_set_info(struct fb_info * x_info)
     x_info->fix.visual = FB_VISUAL_TRUECOLOR;
     x_info->fix.accel = FB_ACCEL_NONE;
     x_info->fix.line_length = X_MAX*4;
+    x_info->fix.mmio_start = x_info->fix.smem_start;
+    x_info->fix.mmio_len = Y_MAX*X_MAX*4;
 
     x_info->var.xres = X_MAX;
     x_info->var.yres = Y_MAX;
