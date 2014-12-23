@@ -244,11 +244,6 @@ static int ud_glcd_mmap(struct file * x_p_file, struct vm_area_struct * x_p_vma)
     unsigned long u32_start;
     unsigned long u32_len;
 
-
-    if (!x_p_devices->x_info)
-    {
-        return -ENODEV;
-    }
     if (x_p_vma->vm_pgoff > (~0UL >> PAGE_SHIFT))
     {
         return -EINVAL;
@@ -284,7 +279,7 @@ static int ud_glcd_mmap(struct file * x_p_file, struct vm_area_struct * x_p_vma)
                  x_p_vma->vm_end - x_p_vma->vm_start, x_p_vma->vm_page_prot))
         return -EAGAIN;
 
-    printfd("io: 0x%x", x_p_devices->x_info.fix.mmio_start);
+    printd("io: 0x%x", x_p_devices->x_info.fix.mmio_start);
 
     return 0;
 }
