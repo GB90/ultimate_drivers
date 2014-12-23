@@ -28,7 +28,7 @@ int main(void)
     struct fb_var_screeninfo vinfo;
     struct fb_fix_screeninfo finfo;
     char *frameBuffer = 0;
-    char *vfb = 0;
+    unsigned long *vfb = 0;
 
     i32_fd_bus = open("/dev/ud_bus", O_RDWR);
     if(i32_fd_bus < 0)
@@ -67,7 +67,8 @@ int main(void)
     frameBuffer = (char *)mmap(0, finfo.smem_len,
                                   PROT_READ | PROT_WRITE, MAP_SHARED,
                                   i32_fd_glcd, 0);
-    frameBuffer = (char *)(0xcf2c0010);
+
+    printf("frameBuffer : 0x%x\n", frameBuffer);
 
     if (frameBuffer == MAP_FAILED) {
         perror("Error: Failed to map framebuffer device to memory");
@@ -80,13 +81,10 @@ int main(void)
     }
     ioctl(i32_fd_glcd, FBIOBLANK, NULL);
 
-    vfb = frameBuffer;
+    vfb = (unsigned long *)frameBuffer;
 
     while(i--)
     {
-        *vfb++ = 0;
-        *vfb++ = 0;
-        *vfb++ = 0;
         *vfb++ = 0;
         x_bus.u32_bus_addr = 0x02;
         x_bus.u32_bus_data = (1<<(i%8))&0xff;
