@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 
 #include <ud_device_bus_emulated.h>
 #include <ud_device_lcd.h>

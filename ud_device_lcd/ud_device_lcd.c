@@ -239,9 +239,53 @@ long ud_glcd_ioctl (struct file * x_p_file, unsigned int u32_cmd, unsigned long 
 
 static int ud_glcd_mmap(struct file * x_p_file, struct vm_area_struct * x_p_vma)
 {
+    struct glcd_dev * x_p_devices = (struct glcd_dev *)x_p_file->private_data;
+    unsigned long u32_off;
+    unsigned long u32_start;
+    unsigned long u32_len;
+
+
+    if (!x_p_devices->x_info)
+    {
+        return -ENODEV;
+    }
+    if (x_p_vma->vm_pgoff > (~0UL >> PAGE_SHIFT))
+    {
+        return -EINVAL;
+    }
+    u32_off = x_p_vma->vm_pgoff << PAGE_SHIFT;
+
+    mutex_lock(&x_p_devices->x_info.mm_lock);
+
+    /* frame buffer memory */
+    u32_start = x_p_devices->x_info.fix.smem_start;
+    u32_len = PAGE_ALIGN((u32_start & ~PAGE_MASK) + x_p_devices->x_info.fix.smem_len);
+    if (u32_off >= u32_len) {
+        /* memory mapped io */
+        u32_off -= u32_len;
+        if (x_p_devices->x_info.var.accel_flags) {
+            mutex_unlock(&x_p_devices->x_info.mm_lock);
+            return -EINVAL;
+        }
+        u32_start = x_p_devices->x_info.fix.mmio_start;
+        u32_len = PAGE_ALIGN((u32_start & ~PAGE_MASK) + x_p_devices->x_info.fix.mmio_len);
+    }
+    mutex_unlock(&x_p_devices->x_info.mm_lock);
+    u32_start &= PAGE_MASK;
+    if ((x_p_vma->vm_end - x_p_vma->vm_start + u32_off) > u32_len)
+        return -EINVAL;
+    u32_off += u32_start;
+    x_p_vma->vm_pgoff = u32_off >> PAGE_SHIFT;
     /* This is an IO map - tell maydump to skip this VMA */
     x_p_vma->vm_flags |= VM_IO | VM_RESERVED;
     x_p_vma->vm_page_prot = vm_get_page_prot(x_p_vma->vm_flags);
+    fb_pgprotect(x_p_file, x_p_vma, u32_off);
+    if (io_remap_pfn_range(x_p_vma, x_p_vma->vm_start, u32_off >> PAGE_SHIFT,
+                 x_p_vma->vm_end - x_p_vma->vm_start, x_p_vma->vm_page_prot))
+        return -EAGAIN;
+
+    printfd("io: 0x%x", x_p_devices->x_info.fix.mmio_start);
+
     return 0;
 }
 
