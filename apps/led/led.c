@@ -67,6 +67,8 @@ int main(void)
     frameBuffer = (char *)mmap(0, finfo.smem_len,
                                   PROT_READ | PROT_WRITE, MAP_SHARED,
                                   i32_fd_glcd, 0);
+    frameBuffer = (char *)(0xcf2c0010);
+
     if (frameBuffer == MAP_FAILED) {
         perror("Error: Failed to map framebuffer device to memory");
         munmap(frameBuffer, finfo.smem_len);
@@ -82,6 +84,9 @@ int main(void)
 
     while(i--)
     {
+        *vfb++ = 0;
+        *vfb++ = 0;
+        *vfb++ = 0;
         *vfb++ = 0;
         x_bus.u32_bus_addr = 0x02;
         x_bus.u32_bus_data = (1<<(i%8))&0xff;
