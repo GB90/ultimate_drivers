@@ -259,7 +259,9 @@ static int ud_glcd_mmap(struct file * x_p_file, struct vm_area_struct * x_p_vma)
     mutex_unlock(&x_p_devices->x_info.mm_lock);
     u32_start &= PAGE_MASK;
     if ((x_p_vma->vm_end - x_p_vma->vm_start + u32_off) > u32_len)
+    {
         return -EINVAL;
+    }
     u32_off += u32_start;
     x_p_vma->vm_pgoff = u32_off >> PAGE_SHIFT;
     /* This is an IO map - tell maydump to skip this VMA */
