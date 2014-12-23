@@ -76,6 +76,7 @@ int main(void)
 
         return (i32_result);
     }
+    ioctl(i32_fd_glcd, FBIOBLANK, NULL);
 
     vfb = frameBuffer;
 
