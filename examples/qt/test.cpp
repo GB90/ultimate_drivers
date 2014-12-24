@@ -21,7 +21,7 @@ int main(int argc,char* argv[])
 	QLabel label(pWidget);
 	
 	pWidget->showMaximized();
-	label.setWindowFlags(Qt::FramelessWindowHint);
+	pWidget->setWindowFlags(Qt::FramelessWindowHint);
 	label.setText(QObject::tr("浙江创维欢迎您！"));
 	QPushButton* btn = new QPushButton(QObject::tr("close"), pWidget);
 	QPushButton* btn1 = new QPushButton(QObject::tr("open"), pWidget);
