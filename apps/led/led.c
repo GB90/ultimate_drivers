@@ -25,11 +25,6 @@ int main(void)
     int i32_result = EXIT_SUCCESS;
     struct bus_struct x_bus;
 
-    struct fb_var_screeninfo vinfo;
-    struct fb_fix_screeninfo finfo;
-    char *frameBuffer = 0;
-    unsigned long *vfb = 0;
-
     i32_fd_bus = open("/dev/ud_bus", O_RDWR);
     if(i32_fd_bus < 0)
     {
@@ -49,43 +44,10 @@ int main(void)
         return (i32_result);
     }
 
-    i32_fd_glcd = open("/dev/ud_glcd", O_RDWR);
-    if(i32_fd_glcd < 0)
-    {
-        printf("open glcd fail\n");
-        i32_result = -1;
-        close(i32_fd_bus);
-        close(i32_fd_lcd);
-        close(i32_fd_glcd);
-        return (i32_result);
-    }
-
     i = 65535;
-
-    ioctl(i32_fd_glcd, FBIOGET_FSCREENINFO, &finfo);
-    ioctl(i32_fd_glcd, FBIOGET_VSCREENINFO, &vinfo);
-    frameBuffer = (char *)mmap(0, finfo.smem_len,
-                                  PROT_READ | PROT_WRITE, MAP_SHARED,
-                                  i32_fd_glcd, 0);
-
-    printf("frameBuffer : 0x%x\n", frameBuffer);
-
-    if (frameBuffer == MAP_FAILED) {
-        perror("Error: Failed to map framebuffer device to memory");
-        munmap(frameBuffer, finfo.smem_len);
-        close(i32_fd_bus);
-        close(i32_fd_lcd);
-        close(i32_fd_glcd);
-
-        return (i32_result);
-    }
-    ioctl(i32_fd_glcd, FBIOBLANK, NULL);
-
-    vfb = (unsigned long *)frameBuffer;
 
     while(i--)
     {
-        *vfb++ = 0;
         x_bus.u32_bus_addr = 0x02;
         x_bus.u32_bus_data = (1<<(i%8))&0xff;
         ioctl(i32_fd_bus, UD_BUS_CMD_SET_DATA, &x_bus);
@@ -93,10 +55,8 @@ int main(void)
         sleep(1);
     }
 
-    munmap(frameBuffer, finfo.smem_len);
     close(i32_fd_bus);
     close(i32_fd_lcd);
-    close(i32_fd_glcd);
 
 	return (i32_result);
 }
