@@ -18,7 +18,7 @@ int main(int argc,char* argv[])
     font.setBold(false);
 	app.setFont(font);
 	
-	QTextCodec::setCodecForTr(QTextCodec::codecForName("gb18030"));
+	QTextCodec::setCodecForTr(QTextCodec::codecForName("utf8"));
 	QWidget* pWidget = new QWidget;
 	QLabel label(pWidget);
 	// pWidget.showMaximized();
