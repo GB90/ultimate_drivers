@@ -194,7 +194,7 @@ void ud_lcd_export_refresh(void)
                 x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram + u32_y*X_MAX*4 + u32_x*4;
                 if(ud_lcd_color2bw(x_p_lcd_devices->u8_p_color) != 0)
                 {
-                    u16_data |= 0x3800;
+                    u16_data |= 0x8000;
                 }
             }
             if(u32_x%3 == 1)
