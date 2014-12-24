@@ -333,10 +333,6 @@ static int __init ud_lcd160160_module_init (void)
     for (i = 0; i < max_devs; i++)
     {
         mutex_init(&x_p_lcd_devices[i].x_lock);
-
-        ud_lcd_export_init();
-        ud_lcd_export_init();
-        
         
         x_p_lcd_devices[i].u8_p_lcd_dram = kmalloc(Y_MAX*X_MAX*4, GFP_KERNEL);
         printd("mmap = %p\n", x_p_lcd_devices[i].u8_p_lcd_dram);
@@ -351,6 +347,9 @@ static int __init ud_lcd160160_module_init (void)
 		        SetPageReserved(virt_to_page(u32_virt_addr));
         }
         
+        ud_lcd_export_init();
+        ud_lcd_export_init();
+
         memcpy(x_p_lcd_devices[i].u8_p_lcd_dram, u32_ud_lcd_creaway_logo, Y_MAX*X_MAX*4);
         ud_lcd_export_refresh();
 
