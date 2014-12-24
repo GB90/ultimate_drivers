@@ -74,6 +74,11 @@ int minor = 0;
 //设备数量
 int max_devs = UD_LCD_MAX_DEVS;
 
+int bwb = 380;
+
+module_param(major, int ,S_IRUGO);
+module_param(bwb, int ,S_IRUGO);
+
 
 void ud_lcd_reset_backlight(int i32_rst, int i32_blon)
 {
@@ -154,7 +159,7 @@ int ud_lcd_export_init(void)
 int ud_lcd_color2bw(unsigned char * u8_p_color)
 {
     //255*3/2 总色彩过半就认为是白色的
-    if((*u8_p_color) + (*(u8_p_color+1)) + (*(u8_p_color+2)) > 400)
+    if((*u8_p_color) + (*(u8_p_color+1)) + (*(u8_p_color+2)) > bwb)
     {
         return (0);
     }
