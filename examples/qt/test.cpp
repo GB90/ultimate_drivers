@@ -18,13 +18,13 @@ int main(int argc,char* argv[])
     font.setBold(false);
 	app.setFont(font);
 	
-	QTextCodec::setCodecForTr(QTextCodec::codecForName("GBK"));
+	//QTextCodec::setCodecForTr(QTextCodec::codecForName("GBK"));
 	QWidget* pWidget = new QWidget;
 	QLabel label(pWidget);
 	// pWidget.showMaximized();
 	
 	pWidget->showMaximized();
-	label.setText(QObject::tr("浙江创维欢迎您!"));
+	label.setText(QObject::tr("浙江创维欢迎您！"));
 	QPushButton* btn = new QPushButton(QObject::tr("close!"), pWidget);
 	QVBoxLayout* layout = new QVBoxLayout;
 	layout->addWidget(&label);
