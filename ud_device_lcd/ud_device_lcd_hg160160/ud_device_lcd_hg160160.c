@@ -22,6 +22,7 @@
 #include <linux/fcntl.h>
 #include <linux/seq_file.h>
 #include <linux/mutex.h>
+#include <linux/mm.h>
 
 #include <asm/uaccess.h>
 
@@ -60,7 +61,8 @@ struct lcd_dev
 {
     struct mutex        x_lock;
     unsigned char *     u8_p_color;
-    unsigned char       u8_p_lcd_dram[Y_MAX][X_MAX][4];
+    unsigned char *     u8_p_lcd_dram;
+    unsigned char *     u8_p_lcd_dram_area;
     struct cdev         x_cdev;
 };
 struct lcd_dev * x_p_lcd_devices;
@@ -104,7 +106,7 @@ int ud_lcd_export_init(void)
     struct bus_struct x_bus;
 
     ud_lcd_reset_backlight(1,1);
-    memset(x_p_lcd_devices->u8_p_lcd_dram, 0x00ffffff, Y_MAX*X_MAX*4);
+    memset(x_p_lcd_devices->u8_p_lcd_dram, 0xff, Y_MAX*X_MAX*4);
 
     x_bus.u32_bus_addr = LCD_REG_CMD;
 
@@ -166,26 +168,6 @@ int ud_lcd_export_blank(void)
     return (0);
 }
 
-void ud_lcd_export_fillrect(const struct fb_fillrect * x_p_rect)
-{
-
-}
-
-void ud_lcd_export_copyarea(const struct fb_copyarea * x_p_region)
-{
-
-}
-
-void ud_lcd_export_imageblit(const struct fb_image * x_p_image)
-{
-
-}
-
-void ud_lcd_export_rotate(int i32_angle)
-{
-
-}
-
 void ud_lcd_export_refresh(void)
 {
     unsigned int u32_x;
@@ -209,7 +191,7 @@ void ud_lcd_export_refresh(void)
             if(u32_x%3 == 0)
             {
                 u16_data = 0;
-                x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram[u32_y][u32_x];
+                x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram + u32_y*X_MAX + u32_x;
                 if(ud_lcd_color2bw(x_p_lcd_devices->u8_p_color) != 0)
                 {
                     u16_data |= 0xf800;
@@ -217,7 +199,7 @@ void ud_lcd_export_refresh(void)
             }
             if(u32_x%3 == 1)
             {
-                x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram[u32_y][u32_x];
+                x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram + u32_y*X_MAX + u32_x;
                 if(ud_lcd_color2bw(x_p_lcd_devices->u8_p_color) != 0)
                 {
                     u16_data |= 0x07e0;
@@ -225,7 +207,7 @@ void ud_lcd_export_refresh(void)
             }
             if(u32_x%3 == 2)
             {
-                x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram[u32_y][u32_x];
+                x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram + u32_y*X_MAX + u32_x;
                 if(ud_lcd_color2bw(x_p_lcd_devices->u8_p_color) != 0)
                 {
                     u16_data |= 0x001f;
@@ -247,14 +229,14 @@ void ud_lcd_export_refresh(void)
 int ud_lcd_export_set_info(struct fb_info * x_info)
 {
     memcpy(x_info->fix.id, "hg160160", 8);
-    x_info->fix.smem_start = (unsigned long)(&(x_p_lcd_devices->u8_p_lcd_dram));
+    x_info->fix.smem_start = (unsigned long)((x_p_lcd_devices->u8_p_lcd_dram));
     x_info->fix.smem_len = Y_MAX*X_MAX*4;
     x_info->fix.type = FB_TYPE_PACKED_PIXELS;
     x_info->fix.visual = FB_VISUAL_TRUECOLOR;
     x_info->fix.accel = FB_ACCEL_NONE;
     x_info->fix.line_length = X_MAX*4;
-    x_info->fix.mmio_start = x_info->fix.smem_start;
-    x_info->fix.mmio_len = Y_MAX*X_MAX*4;
+    x_info->fix.mmio_start = (unsigned long)((x_p_lcd_devices->u8_p_lcd_dram_area));
+    x_info->fix.mmio_len = x_info->fix.smem_len;
 
     x_info->var.xres = X_MAX;
     x_info->var.yres = Y_MAX;
@@ -318,15 +300,16 @@ static int __init ud_lcd160160_module_init (void)
     int i32_result, i32_err;
     dev_t x_dev = 0;
     int i;
+    unsigned long u32_virt_addr;
 
     if (major)
     {
         x_dev = MKDEV(major, minor);
-        i32_result = register_chrdev_region(x_dev, max_devs, "x_p_lcd_devices");
+        i32_result = register_chrdev_region(x_dev, max_devs, "ud_lcd");
     }
     else
     {
-        i32_result = alloc_chrdev_region(&x_dev, minor, max_devs, "x_p_lcd_devices");
+        i32_result = alloc_chrdev_region(&x_dev, minor, max_devs, "ud_lcd");
         major = MAJOR(x_dev);
         printd("dev major is %d\n", major);
     }
@@ -353,6 +336,21 @@ static int __init ud_lcd160160_module_init (void)
 
         ud_lcd_export_init();
         ud_lcd_export_init();
+        
+        
+        x_p_lcd_devices[i].u8_p_lcd_dram = kmalloc(Y_MAX*X_MAX*4, GFP_KERNEL);
+        printd("mmap = %p\n", x_p_lcd_devices[i].u8_p_lcd_dram);
+        x_p_lcd_devices[i].u8_p_lcd_dram_area = (char *)(((unsigned long)x_p_lcd_devices[i].u8_p_lcd_dram + PAGE_SIZE -1) & PAGE_MASK);
+        
+        for (u32_virt_addr = (unsigned long)x_p_lcd_devices[i].u8_p_lcd_dram_area; 
+             u32_virt_addr < (unsigned long)x_p_lcd_devices[i].u8_p_lcd_dram_area + Y_MAX*X_MAX*4; 
+             u32_virt_addr += PAGE_SIZE)
+        {
+		        /* reserve all pages to make them remapable */
+		        //将页配置为保留，防止映射到用户空间的页面被swap out出去；
+		        SetPageReserved(virt_to_page(u32_virt_addr));
+        }
+        
         memcpy(x_p_lcd_devices[i].u8_p_lcd_dram, u32_ud_lcd_creaway_logo, Y_MAX*X_MAX*4);
         ud_lcd_export_refresh();
 
@@ -381,16 +379,28 @@ static void __exit ud_lcd160160_module_exit (void)
 {
     dev_t x_dev = MKDEV(major, minor);
     int i;
+    unsigned long u32_virt_addr;
 
     if (x_p_lcd_devices)
     {
         for (i = 0; i < max_devs; i++)
         {
+        	  if (x_p_lcd_devices[i].u8_p_lcd_dram)
+            {
+            	  for (u32_virt_addr = (unsigned long)x_p_lcd_devices[i].u8_p_lcd_dram_area; 
+                     u32_virt_addr < (unsigned long)x_p_lcd_devices[i].u8_p_lcd_dram_area + Y_MAX*X_MAX*4; 
+                     u32_virt_addr += PAGE_SIZE)
+				        {
+						        /* clear all pages*/
+						        ClearPageReserved(virt_to_page(u32_virt_addr));
+				        }
+                kfree(x_p_lcd_devices[i].u8_p_lcd_dram);
+            }
             cdev_del(&x_p_lcd_devices[i].x_cdev);
         }
         kfree(x_p_lcd_devices);
     }
-
+    
     unregister_chrdev_region(x_dev, max_devs);
     printd("rmmod successfully\n");
 }

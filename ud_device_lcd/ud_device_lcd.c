@@ -241,38 +241,36 @@ static int ud_glcd_mmap(struct file * x_p_file, struct vm_area_struct * x_p_vma)
 {
     struct glcd_dev * x_p_devices = (struct glcd_dev *)x_p_file->private_data;
     unsigned long u32_off;
-    unsigned long u32_start;
     unsigned long u32_len;
 
     if (x_p_vma->vm_pgoff > (~0UL >> PAGE_SHIFT))
     {
         return -EINVAL;
     }
+    
     u32_off = x_p_vma->vm_pgoff << PAGE_SHIFT;
-
-    mutex_lock(&x_p_devices->x_info.mm_lock);
-
-    /* frame buffer memory */
-    u32_start = x_p_devices->x_info.fix.smem_start;
-    u32_len = PAGE_ALIGN((u32_start & ~PAGE_MASK) + x_p_devices->x_info.fix.smem_len);
-
-    mutex_unlock(&x_p_devices->x_info.mm_lock);
-    u32_start &= PAGE_MASK;
+    u32_len = PAGE_ALIGN(x_p_devices->x_info.fix.smem_len);
+    if ((x_p_vma->vm_end - x_p_vma->vm_start) > u32_len)
+    {
+        return -EINVAL;
+    }
     if ((x_p_vma->vm_end - x_p_vma->vm_start + u32_off) > u32_len)
     {
         return -EINVAL;
     }
-    u32_off += u32_start;
-    x_p_vma->vm_pgoff = u32_off >> PAGE_SHIFT;
-    /* This is an IO map - tell maydump to skip this VMA */
-    x_p_vma->vm_flags |= VM_IO | VM_RESERVED;
-    x_p_vma->vm_page_prot = vm_get_page_prot(x_p_vma->vm_flags);
-    fb_pgprotect(x_p_file, x_p_vma, u32_off);
-    if (io_remap_pfn_range(x_p_vma, x_p_vma->vm_start, u32_off >> PAGE_SHIFT,
-                 x_p_vma->vm_end - x_p_vma->vm_start, x_p_vma->vm_page_prot))
-        return -EAGAIN;
 
-    printd("io: 0x%x", x_p_devices->x_info.fix.smem_start);
+    mutex_lock(&x_p_devices->x_info.mm_lock);
+    
+    if (remap_pfn_range(x_p_vma, x_p_vma->vm_start,
+     //这个地方由于我们是将一段虚拟内存buffer_area虚拟为物理内存，
+     //所以这里要使用virt_to_phys，在实际的驱动程序中这里就是设备的物理地址，不需要转换了
+     virt_to_phys((void*)((unsigned long)x_p_devices->x_info.fix.mmio_start)) >> PAGE_SHIFT,
+     x_p_vma->vm_end - x_p_vma->vm_start, PAGE_SHARED))
+    {
+    	  return -EAGAIN;
+    }
+
+    mutex_unlock(&x_p_devices->x_info.mm_lock);
 
     return 0;
 }
