@@ -9,8 +9,6 @@
 int main(int argc,char* argv[])
 {
 	QApplication app(argc, argv);
-	// app.setFont(QFont("simsun"));
-	
 	
 	QFont font;
     font.setPointSize(12);
@@ -21,14 +19,17 @@ int main(int argc,char* argv[])
 	QTextCodec::setCodecForTr(QTextCodec::codecForName("utf8"));
 	QWidget* pWidget = new QWidget;
 	QLabel label(pWidget);
-	// pWidget.showMaximized();
 	
 	pWidget->showMaximized();
 	label.setText(QObject::tr("浙江创维欢迎您！"));
-	QPushButton* btn = new QPushButton(QObject::tr("close!"), pWidget);
+	QPushButton* btn = new QPushButton(QObject::tr("close"), pWidget);
+	QPushButton* btn1 = new QPushButton(QObject::tr("open"), pWidget);
+	QPushButton* btn2 = new QPushButton(QObject::tr("ioctl"), pWidget);
 	QVBoxLayout* layout = new QVBoxLayout;
 	layout->addWidget(&label);
 	layout->addWidget(btn);
+	layout->addWidget(btn1);
+	layout->addWidget(btn2);
 	pWidget->setLayout(layout);
 	QObject::connect(btn,SIGNAL(clicked()), pWidget, SLOT(close()));
 	pWidget->show();
