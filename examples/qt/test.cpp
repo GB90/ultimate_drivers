@@ -18,7 +18,7 @@ int main(int argc,char* argv[])
     font.setBold(false);
 	app.setFont(font);
 	
-	//QTextCodec::setCodecForTr(QTextCodec::codecForName("GBK"));
+	QTextCodec::setCodecForTr(QTextCodec::codecForName("gb18030"));
 	QWidget* pWidget = new QWidget;
 	QLabel label(pWidget);
 	// pWidget.showMaximized();
@@ -30,6 +30,7 @@ int main(int argc,char* argv[])
 	layout->addWidget(&label);
 	layout->addWidget(btn);
 	pWidget->setLayout(layout);
+	QObject::connect(btn,SIGNAL(clicked()), pWidget, SLOT(close()));
 	pWidget->show();
 	return app.exec();
 }
