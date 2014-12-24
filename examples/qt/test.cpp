@@ -18,19 +18,18 @@ int main(int argc,char* argv[])
     font.setBold(false);
 	app.setFont(font);
 	
-	QTextCodec::setCodecForTr(QTextCodec::codecForName("utf-8"));
+	QTextCodec::setCodecForTr(QTextCodec::codecForName("GBK"));
 	QWidget* pWidget = new QWidget;
 	QLabel label(pWidget);
 	// pWidget.showMaximized();
 	
 	pWidget->showMaximized();
-	label.setText(QObject::tr("´´Î¬»¶Ó­Äú!"));
+	label.setText(QObject::tr("æµ™æ±Ÿåˆ›ç»´æ¬¢è¿Žæ‚¨!"));
 	QPushButton* btn = new QPushButton(QObject::tr("close!"), pWidget);
 	QVBoxLayout* layout = new QVBoxLayout;
 	layout->addWidget(&label);
 	layout->addWidget(btn);
 	pWidget->setLayout(layout);
-	QObject::connect(btn,SIGNAL(clicked()), pWidget, SLOT(close()));
 	pWidget->show();
 	return app.exec();
 }
