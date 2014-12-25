@@ -16,68 +16,21 @@
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
-  <property name="minimumSize">
-   <size>
-    <width>160</width>
-    <height>160</height>
-   </size>
-  </property>
-  <property name="maximumSize">
-   <size>
-    <width>160</width>
-    <height>160</height>
-   </size>
-  </property>
-  <property name="baseSize">
-   <size>
-    <width>160</width>
-    <height>160</height>
-   </size>
-  </property>
   <property name="font">
    <font>
     <family>文泉驿点阵正黑</family>
     <pointsize>12</pointsize>
    </font>
   </property>
-  <property name="cursor">
-   <cursorShape>BlankCursor</cursorShape>
-  </property>
   <property name="windowTitle">
-   <string>hello</string>
+   <string notr="true">hello_qt</string>
   </property>
-  <widget class="QRadioButton" name="radioButton">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>95</y>
-     <width>71</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>选中</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="lineEdit">
-   <property name="geometry">
-    <rect>
-     <x>90</x>
-     <y>10</y>
-     <width>61</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>100</string>
-   </property>
-  </widget>
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
      <x>10</x>
      <y>10</y>
-     <width>66</width>
+     <width>61</width>
      <height>20</height>
     </rect>
    </property>
@@ -85,53 +38,79 @@
     <string>按键值</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QLineEdit" name="lineEdit">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>119</y>
-     <width>61</width>
-     <height>31</height>
+     <x>70</x>
+     <y>10</y>
+     <width>71</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>打开</string>
+    <string>0</string>
    </property>
   </widget>
-  <widget class="QProgressBar" name="progressBar">
+  <widget class="QTableView" name="tableView">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>121</y>
-     <width>71</width>
-     <height>28</height>
+     <x>10</x>
+     <y>90</y>
+     <width>141</width>
+     <height>61</height>
     </rect>
    </property>
-   <property name="value">
-    <number>24</number>
+  </widget>
+  <widget class="QRadioButton" name="radioButton">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>30</y>
+     <width>71</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>单选</string>
    </property>
   </widget>
   <widget class="QCheckBox" name="checkBox">
    <property name="geometry">
     <rect>
      <x>80</x>
-     <y>95</y>
-     <width>71</width>
-     <height>20</height>
+     <y>30</y>
+     <width>61</width>
+     <height>25</height>
     </rect>
    </property>
    <property name="text">
-    <string>打勾</string>
+    <string>多选</string>
    </property>
   </widget>
-  <widget class="QListWidget" name="listWidget">
+  <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>40</y>
-     <width>141</width>
-     <height>51</height>
+     <y>58</y>
+     <width>51</width>
+     <height>26</height>
     </rect>
+   </property>
+   <property name="text">
+    <string>按钮</string>
+   </property>
+  </widget>
+  <widget class="QProgressBar" name="progressBar">
+   <property name="geometry">
+    <rect>
+     <x>70</x>
+     <y>60</y>
+     <width>81</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="value">
+    <number>24</number>
    </property>
   </widget>
  </widget>
