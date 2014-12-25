@@ -186,7 +186,7 @@ void ud_lcd_export_refresh(void)
             {
                 u16_data = 0;
                 x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram + u32_y*X_MAX/8 + u32_x/8;
-                if((*x_p_lcd_devices->u8_p_color) & (1<<(u32_x%8)))
+                if((*x_p_lcd_devices->u8_p_color) & (1<<(7-u32_x%8)))
                 {
                     u16_data |= 0xf800;
                 }
@@ -194,7 +194,7 @@ void ud_lcd_export_refresh(void)
             if(u32_x%3 == 1)
             {
                 x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram + u32_y*X_MAX/8 + u32_x/8;
-                if((*x_p_lcd_devices->u8_p_color) & (1<<(u32_x%8)))
+                if((*x_p_lcd_devices->u8_p_color) & (1<<(7-u32_x%8)))
                 {
                     u16_data |= 0x07e0;
                 }
@@ -202,7 +202,7 @@ void ud_lcd_export_refresh(void)
             if(u32_x%3 == 2)
             {
                 x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram + u32_y*X_MAX/8 + u32_x/8;
-                if((*x_p_lcd_devices->u8_p_color) & (1<<(u32_x%8)))
+                if((*x_p_lcd_devices->u8_p_color) & (1<<(7-u32_x%8)))
                 {
                     u16_data |= 0x001f;
                 }
@@ -226,7 +226,7 @@ int ud_lcd_export_set_info(struct fb_info * x_info)
     x_info->fix.smem_start = (unsigned long)((x_p_lcd_devices->u8_p_lcd_dram));
     x_info->fix.smem_len = Y_MAX*X_MAX/8;
     x_info->fix.type = FB_TYPE_PACKED_PIXELS;
-    x_info->fix.visual = FB_VISUAL_MONO01;
+    x_info->fix.visual = FB_VISUAL_MONO10;
     x_info->fix.accel = FB_ACCEL_NONE;
     x_info->fix.line_length = X_MAX/8;
     x_info->fix.mmio_start = (unsigned long)((x_p_lcd_devices->u8_p_lcd_dram_area));

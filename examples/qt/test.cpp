@@ -11,7 +11,7 @@ int main(int argc,char* argv[])
 	QApplication app(argc, argv);
 	
 	QFont font;
-    font.setPointSize(16);
+    font.setPointSize(12);
     font.setFamily(("wenquanyi"));
     font.setBold(false);
 	app.setFont(font);
@@ -21,7 +21,7 @@ int main(int argc,char* argv[])
 	QLabel label(pWidget);
 	
 	pWidget->showMaximized();
-	pWidget->setWindowFlags(Qt::FramelessWindowHint);
+	//pWidget->setWindowFlags(Qt::FramelessWindowHint);
 	label.setText(QObject::tr("浙江创维欢迎您！"));
 	QPushButton* btn = new QPushButton(QObject::tr("close"), pWidget);
 	QPushButton* btn1 = new QPushButton(QObject::tr("open"), pWidget);
