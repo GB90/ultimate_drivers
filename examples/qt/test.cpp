@@ -15,24 +15,25 @@ int main(int argc,char* argv[])
     font.setFamily(("wenquanyi"));
     font.setBold(false);
 	app.setFont(font);
-	
 	QTextCodec::setCodecForTr(QTextCodec::codecForName("utf8"));
-	QWidget* pWidget = new QWidget;
-	QLabel label(pWidget);
 	
+	QWidget* pWidget = new QWidget;
 	pWidget->showMaximized();
-	//pWidget->setWindowFlags(Qt::FramelessWindowHint);
-	label.setText(QObject::tr("浙江创维欢迎您！"));
-	QPushButton* btn = new QPushButton(QObject::tr("close"), pWidget);
-	QPushButton* btn1 = new QPushButton(QObject::tr("open"), pWidget);
-	QPushButton* btn2 = new QPushButton(QObject::tr("ioctl"), pWidget);
+	pWidget->setWindowFlags(Qt::FramelessWindowHint);
+
+	QLabel* label = new QLabel(QObject::tr("浙江创维 按键键值："), pWidget);
+	QLabel* label_key = new QLabel(QObject::tr("0"), pWidget);
+	QPushButton* btn1 = new QPushButton(QObject::tr("close"), pWidget);
+	QPushButton* btn2 = new QPushButton(QObject::tr("open"), pWidget);
 	QVBoxLayout* layout = new QVBoxLayout;
 	layout->addWidget(&label);
-	layout->addWidget(btn);
+	layout->addWidget(&label_key);
 	layout->addWidget(btn1);
 	layout->addWidget(btn2);
 	pWidget->setLayout(layout);
 	QObject::connect(btn,SIGNAL(clicked()), pWidget, SLOT(close()));
 	pWidget->show();
+
+	label_key.setText(QObject::tr("0"));
 	return app.exec();
 }
