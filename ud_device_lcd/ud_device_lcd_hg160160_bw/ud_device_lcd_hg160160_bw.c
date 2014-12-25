@@ -186,7 +186,7 @@ void ud_lcd_export_refresh(void)
             {
                 u16_data = 0;
                 x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram + u32_y*X_MAX/8 + u32_x/8;
-                if((*x_p_lcd_devices->u8_p_color) & (1<<(7-u32_x%8)))
+                if(((*x_p_lcd_devices->u8_p_color) & (1<<(7-u32_x%8))) == 0)
                 {
                     u16_data |= 0xf800;
                 }
@@ -194,7 +194,7 @@ void ud_lcd_export_refresh(void)
             if(u32_x%3 == 1)
             {
                 x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram + u32_y*X_MAX/8 + u32_x/8;
-                if((*x_p_lcd_devices->u8_p_color) & (1<<(7-u32_x%8)))
+                if(((*x_p_lcd_devices->u8_p_color) & (1<<(7-u32_x%8))) == 0)
                 {
                     u16_data |= 0x07e0;
                 }
@@ -202,7 +202,7 @@ void ud_lcd_export_refresh(void)
             if(u32_x%3 == 2)
             {
                 x_p_lcd_devices->u8_p_color = x_p_lcd_devices->u8_p_lcd_dram + u32_y*X_MAX/8 + u32_x/8;
-                if((*x_p_lcd_devices->u8_p_color) & (1<<(7-u32_x%8)))
+                if(((*x_p_lcd_devices->u8_p_color) & (1<<(7-u32_x%8))) == 0)
                 {
                     u16_data |= 0x001f;
                 }
