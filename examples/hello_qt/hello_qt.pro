@@ -1,10 +1,18 @@
 TEMPLATE = app
-TARGET = hello_qt 
-
-QT        += core gui 
-
-HEADERS   += hello_qt.h
-SOURCES   += main.cpp \
-    hello_qt.cpp
-FORMS     += hello_qt.ui    
-RESOURCES +=
+TARGET = qt_ui
+QT += core \
+    gui
+HEADERS += ui/qt_ui.h \
+    qt_common.h \
+    thread/qt_thread_display.h \
+    thread/qt_thread_key.h \
+    thread/qt_thread_led.h \
+    ui/ui_qt_ui.h
+SOURCES += qt_common.cpp \
+    ui/qt_ui.cpp \
+    thread/qt_thread_display.cpp \
+    thread/qt_thread_key.cpp \
+    thread/qt_thread_led.cpp \
+    main.cpp
+FORMS += ui/qt_ui.ui
+RESOURCES += 
