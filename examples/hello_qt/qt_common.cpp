@@ -16,8 +16,6 @@ qt_common::qt_common()
         key[i].key_status = 0;
         key[i].key_time = 0;
     }
-
-    main_ui.show();
 }
 
 qt_common::~qt_common()

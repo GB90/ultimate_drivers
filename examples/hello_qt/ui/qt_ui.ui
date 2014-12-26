@@ -25,144 +25,68 @@
   <property name="windowTitle">
    <string notr="true">hello_qt</string>
   </property>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QTabWidget" name="tabWidget">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>60</y>
-     <width>41</width>
-     <height>30</height>
+     <x>0</x>
+     <y>0</y>
+     <width>160</width>
+     <height>160</height>
     </rect>
    </property>
-   <property name="focusPolicy">
-    <enum>Qt::NoFocus</enum>
+   <property name="currentIndex">
+    <number>0</number>
    </property>
-   <property name="text">
-    <string>1</string>
-   </property>
-   <property name="checkable">
-    <bool>false</bool>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton_4">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>90</y>
-     <width>41</width>
-     <height>30</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>4</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton_5">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>120</y>
-     <width>41</width>
-     <height>30</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>7</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton_7">
-   <property name="geometry">
-    <rect>
-     <x>110</x>
-     <y>60</y>
-     <width>41</width>
-     <height>30</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>3</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton_8">
-   <property name="geometry">
-    <rect>
-     <x>110</x>
-     <y>90</y>
-     <width>41</width>
-     <height>30</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>6</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton_9">
-   <property name="geometry">
-    <rect>
-     <x>110</x>
-     <y>120</y>
-     <width>41</width>
-     <height>30</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>9</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton_2">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>60</y>
-     <width>41</width>
-     <height>30</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>2</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton_3">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>90</y>
-     <width>41</width>
-     <height>30</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>5</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pushButton_6">
-   <property name="geometry">
-    <rect>
-     <x>60</x>
-     <y>120</y>
-     <width>41</width>
-     <height>30</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>8</string>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="lineEdit">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>141</width>
-     <height>41</height>
-    </rect>
-   </property>
-   <property name="inputMask">
-    <string/>
-   </property>
-   <property name="text">
-    <string>0</string>
-   </property>
+   <widget class="QWidget" name="tab_a_1_b_">
+    <attribute name="title">
+     <string>交流采样</string>
+    </attribute>
+    <widget class="QListView" name="listView">
+     <property name="geometry">
+      <rect>
+       <x>2</x>
+       <y>2</y>
+       <width>152</width>
+       <height>118</height>
+      </rect>
+     </property>
+    </widget>
+   </widget>
+   <widget class="QWidget" name="tab_a_2_b_">
+    <attribute name="title">
+     <string>电能计量</string>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="tab_a_3_b_">
+    <attribute name="title">
+     <string>电能质量</string>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="tab_a_4_b_">
+    <attribute name="title">
+     <string>事件记录</string>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="tab_a_5_b_">
+    <attribute name="title">
+     <string>异常告警</string>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="tab_a_6_b_">
+    <attribute name="title">
+     <string>参数设置查询</string>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="tab_a_7_b_">
+    <attribute name="title">
+     <string>开关量查询</string>
+    </attribute>
+   </widget>
+   <widget class="QWidget" name="tab_a_8_b_">
+    <attribute name="title">
+     <string>终端维护</string>
+    </attribute>
+   </widget>
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>

@@ -24,6 +24,7 @@ void qt_thread_key::run()
         else
         {
             x_bus.u32_bus_addr = 0x02;
+            x_bus.u32_bus_data = 0;
             ioctl(i32_fd_bus, UD_BUS_CMD_GET_DATA, &x_bus);
             qt_con->lock_key.lock();
             for(int i=0; i<8; i++)
